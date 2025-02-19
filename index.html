@@ -57,6 +57,19 @@
         td:last-child {
             white-space: nowrap; /* Aby bylo tlačítko na stejném řádku jako počet */
         }
+        /* Upravíme výšku řádků v aplikaci */
+        td { 
+            padding: 4px 8px; /* Zmenšíme padding */
+            line-height: 1.2; /* Zmenšíme výšku řádku */
+            font-size: 14px; /* Menší písmo v tabulce */
+        }
+
+        /* Upravíme kontejner pro mazací tlačítko */
+        .quantity-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -222,15 +235,16 @@
             if (product) {
                 name = product.name;
                 const price = product.price;
-                // Přidáme tlačítko pro smazání řádku
                 let row = `
                     <tr>
                         <td>${normalizedCode}</td>
                         <td>${name}</td>
                         <td>${price}</td>
                         <td>
-                            ${quantity}
-                            <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                            <div class="quantity-container">
+                                <span class="quantity-value">${quantity}</span>
+                                <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                            </div>
                         </td>
                     </tr>`;
                 document.getElementById("product-table").innerHTML += row;
@@ -241,8 +255,10 @@
                         <td>Neznámý produkt</td>
                         <td>-</td>
                         <td>
-                            ${quantity}
-                            <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                            <div class="quantity-container">
+                                <span class="quantity-value">${quantity}</span>
+                                <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                            </div>
                         </td>
                     </tr>`;
                 document.getElementById("product-table").innerHTML += row;
@@ -270,8 +286,13 @@
             const data = [['Kód', 'Název', 'Cena', 'Počet']];
             document.querySelectorAll("#product-table tr").forEach(row => {
                 const rowData = [];
-                row.querySelectorAll("td").forEach(cell => {
-                    rowData.push(cell.innerText);
+                row.querySelectorAll("td").forEach((cell, index) => {
+                    // Pro sloupec s množstvím bereme pouze číslo, ne tlačítko
+                    if (index === 3) {
+                        rowData.push(cell.querySelector('.quantity-value').innerText);
+                    } else {
+                        rowData.push(cell.innerText);
+                    }
                 });
                 data.push(rowData);
             });
