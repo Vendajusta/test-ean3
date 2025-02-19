@@ -17,7 +17,7 @@
 </head>
 <body>
     <h2>Skladový skener</h2>
-    <button onclick="startScanner()">Naskenovat produkt</button>
+    <button onclick="startScanner()">Naskenovatt produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -33,17 +33,46 @@
     <button onclick="exportTableToCSV()">Exportovat do CSV</button>
 
     <script>
-        const database = {
-            "8594003118106": "Mléko 1L",
-            "4006381333931": "Fix Stabilo",
-            "8593893752012": "Chléb"
-        };
+        // Nahradíme konstantní databázi za dynamickou
+        let database = {};
+        
+        // Přidáme URL vašeho Google Sheets (musí být publikované jako CSV)
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFKCUkz_etTLnONxyS8YN9UzBS5wq3xlC7cXZ-St4Ji-dBwF-k7KTA6J-OkdOJQ-9ibCnVFtWzVBh3/pubhtml?gid=0&single=true';
+        
+        // Funkce pro načtení databáze z Google Sheets
+        async function loadDatabase() {
+            try {
+                const response = await fetch(SHEET_URL);
+                const csvText = await response.text();
+                
+                // Zpracování CSV
+                const rows = csvText.split('\n').slice(1); // Přeskočit hlavičku
+                rows.forEach(row => {
+                    const [code, name] = row.split(',').map(cell => cell.trim());
+                    if (code && name) {
+                        database[code] = name;
+                    }
+                });
+                
+                console.log('Databáze načtena:', database);
+            } catch (error) {
+                console.error('Chyba při načítání databáze:', error);
+                alert('Nepodařilo se načíst databázi produktů');
+            }
+        }
+
+        // Načteme databázi při startu
+        loadDatabase();
 
         let html5QrcodeScanner;
         let lastCode = null;
         let lastTime = 0;
 
         async function startScanner() {
+            if (Object.keys(database).length === 0) {
+                await loadDatabase(); // Zkusíme znovu načíst pokud není načtená
+            }
+            
             const html5QrCode = new Html5Qrcode("reader");
             document.getElementById('stop-button').style.display = 'inline';
 
