@@ -24,7 +24,7 @@
             <option value="">Vyberte kameru...</option>
         </select>
     </div>
-    <button onclick="startScanner()">Naskenot produkt</button>
+    <button onclick="startScanner()">Naskenovat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -38,50 +38,28 @@
         </thead>
         <tbody id="product-table"></tbody>
     </table>
-    <button onclick="exportTableToCSV()">Exportovat do CSV</button>
-    
-    <!-- Přidáme debug panel -->
-    <div id="debug-panel" style="margin-top: 20px; padding: 10px; background: #f0f0f0; font-family: monospace; font-size: 12px;">
-        <h3>Debug info:</h3>
-        <div id="debug-log" style="white-space: pre-wrap;"></div>
-    </div>
+    <button onclick="exportTableToCSV()">Exportovat jako tabulku</button>
 
     <script>
-        // Upravíme strukturu databáze pro ukládání více informací
         let database = {};
         
-        // Přímý odkaz na CSV
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFKCUkz_etTLnONxyS8YN9UzBS5wq3xlC7cXZ-St4Ji-dBwF-k7KTA6J-OkdOJQ-9ibCnVFtWzVBh3/pub?gid=0&single=true&output=csv';
 
-        // Přidáme funkci pro logování
-        function debugLog(message) {
-            const logDiv = document.getElementById('debug-log');
-            const time = new Date().toLocaleTimeString();
-            logDiv.innerHTML += `[${time}] ${message}\n`;
-            console.log(message);
-        }
-
-        // Upravíme loadDatabase pro zobrazování průběhu
         async function loadDatabase() {
             try {
-                debugLog('Načítám data z tabulky...');
                 const response = await fetch(SHEET_URL);
                 if (!response.ok) {
                     throw new Error('Nelze načíst data');
                 }
                 
                 const text = await response.text();
-                debugLog(`Načtená data: ${text.substring(0, 100)}...`);
-                
                 const rows = text
                     .split('\n')
                     .map(row => row.trim())
                     .filter(row => row.length > 0);
                 
                 database = {};
-                // Přeskočíme první řádek (hlavičku)
                 for (let i = 1; i < rows.length; i++) {
-                    // Rozdělíme řádek na sloupce (kód, název, cena)
                     const parts = rows[i].split(/[,\t]+|\s{2,}/);
                     if (parts.length >= 3) {
                         const code = parts[0]?.replace(/['"]/g, '').trim();
@@ -94,19 +72,14 @@
                                 name: name,
                                 price: price
                             };
-                            debugLog(`Přidávám: [${normalizedCode}] = "${name}" (${price} Kč)`);
                         }
                     }
                 }
-                
-                debugLog(`Celkem načteno ${Object.keys(database).length} položek`);
             } catch (error) {
-                debugLog(`CHYBA: ${error.message}`);
                 alert('Nepodařilo se načíst databázi produktů');
             }
         }
 
-        // Načteme databázi při startu
         loadDatabase();
 
         let html5QrcodeScanner;
@@ -196,7 +169,6 @@
             }
         }
 
-        // Upravíme funkci pro přidání produktu
         function addProduct(code, name, quantity) {
             const normalizedCode = code.replace(/[^0-9]/g, '');
             const product = database[normalizedCode];
@@ -206,20 +178,22 @@
                 const price = product.price;
                 let row = `<tr><td>${normalizedCode}</td><td>${name}</td><td>${price}</td><td>${quantity}</td></tr>`;
                 document.getElementById("product-table").innerHTML += row;
-                debugLog(`Přidán produkt: ${name} (${price} Kč) - ${quantity}x`);
             } else {
                 let row = `<tr><td>${normalizedCode}</td><td>Neznámý produkt</td><td>-</td><td>${quantity}</td></tr>`;
                 document.getElementById("product-table").innerHTML += row;
-                debugLog(`Neznámý produkt: ${normalizedCode}`);
             }
         }
 
-        // Upravíme export do CSV
         function exportTableToCSV() {
-            // Vytvoříme workbook
             const wb = XLSX.utils.book_new();
             
-            // Získáme data z tabulky
+            // Získáme aktuální datum ve formátu DD-MM-YYYY
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            const dateStr = `${dd}-${mm}-${yyyy}`;
+            
             const data = [['Kód', 'Název', 'Cena', 'Počet']];
             document.querySelectorAll("#product-table tr").forEach(row => {
                 const rowData = [];
@@ -229,14 +203,12 @@
                 data.push(rowData);
             });
 
-            // Vytvoříme worksheet
             const ws = XLSX.utils.aoa_to_sheet(data);
-            
-            // Přidáme worksheet do workbooku
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
 
-            // Stáhneme Excel soubor
-            XLSX.writeFile(wb, "sklad.xlsx");
+            // Vytvoříme název souboru s aktuálním datem
+            const fileName = `vypis_${dateStr}.xlsx`;
+            XLSX.writeFile(wb, fileName);
         }
     </script>
 </body>
