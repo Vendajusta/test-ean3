@@ -234,18 +234,13 @@
         }
 
         function normalizeEAN(code) {
-            // Odstraníme všechny nečíselné znaky a zajistíme délku 14 znaků
-            let numbers = code.replace(/[^0-9]/g, '');
-            // Doplníme nulami zleva, pokud je kód kratší než 14 znaků
-            while (numbers.length < 14) {
-                numbers = '0' + numbers;
-            }
-            // Vezmeme posledních 14 číslic, pokud je kód delší
-            return numbers.slice(-14);
+            // Pouze odstraníme nečíselné znaky
+            return code.replace(/[^0-9]/g, '');
         }
 
         function addProduct(code, name, quantity) {
             const normalizedCode = normalizeEAN(code);
+            // Hledáme v databázi přesnou shodu s naskenovaným kódem
             const product = database[normalizedCode];
             
             if (product) {
