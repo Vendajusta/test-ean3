@@ -231,16 +231,25 @@
         async function startScanner() {
             try {
                 const cameras = await Html5Qrcode.getCameras();
-                // Najdeme zadní kameru
-                const backCamera = cameras.find(camera => 
-                    camera.label.toLowerCase().includes('back') ||
-                    camera.label.toLowerCase().includes('zadní') ||
-                    camera.label.includes('2') ||
-                    camera.label.includes('1')
-                );
+                console.log("Dostupné kamery:", cameras); // Pro debugování
+
+                // Prioritizovaný seznam klíčových slov pro zadní kameru
+                const backKeywords = ['back', 'zadní', 'rear', '1', '2', 'main', 'wide'];
                 
-                // Použijeme nalezenou zadní kameru nebo první dostupnou
-                const cameraId = backCamera ? backCamera.id : cameras[0].id;
+                // Najdeme zadní kameru podle klíčových slov
+                let backCamera = null;
+                for (const keyword of backKeywords) {
+                    backCamera = cameras.find(camera => 
+                        camera.label.toLowerCase().includes(keyword.toLowerCase())
+                    );
+                    if (backCamera) break;
+                }
+
+                // Pokud není nalezena podle klíčových slov, vezmeme poslední kameru
+                // (často je to ta zadní)
+                const cameraId = backCamera ? backCamera.id : cameras[cameras.length - 1].id;
+                console.log("Vybraná kamera:", cameras.find(c => c.id === cameraId).label);
+                
                 startScannerWithCamera(cameraId);
             } catch (err) {
                 console.error('Chyba při hledání kamer:', err);
