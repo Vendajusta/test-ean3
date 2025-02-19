@@ -17,7 +17,7 @@
 </head>
 <body>
     <h2>Skladový skener</h2>
-    <button onclick="startScanner()">Naskenovat produkt</button>
+    <button onclick="startScanner()">Naskenovaaat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -94,18 +94,34 @@
                 await html5QrCode.start(
                     cameraId,
                     {
-                        fps: 10,
-                        qrbox: { width: 250, height: 150 },
+                        fps: 5, // Snížíme FPS pro lepší kvalitu
+                        qrbox: { width: 200, height: 100 }, // Menší oblast pro přesnější zaměření
                         aspectRatio: 1.777778,
                         formatsToSupport: [
                             Html5QrcodeSupportedFormats.EAN_13,
                             Html5QrcodeSupportedFormats.EAN_8
-                        ]
+                        ],
+                        videoConstraints: {
+                            width: { min: 1280, ideal: 1920, max: 2560 },
+                            height: { min: 720, ideal: 1080, max: 1440 },
+                            facingMode: { exact: "environment" },
+                            focusMode: "continuous",
+                            advanced: [{
+                                zoom: 2.0,
+                                focusMode: "continuous",
+                                focusDistance: 5,
+                                exposureMode: "continuous",
+                                whiteBalanceMode: "continuous",
+                                brightness: 2,
+                                sharpness: 2
+                            }]
+                        }
                     },
                     (decodedText) => {
                         const now = Date.now();
                         if (decodedText === lastCode && now - lastTime < 2000) return;
                         
+                        navigator.vibrate(100); // Přidáme vibraci pro lepší zpětnou vazbu
                         new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
                         
                         lastCode = decodedText;
@@ -115,7 +131,12 @@
                         let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
                         if (quantity) addProduct(decodedText, name, quantity);
                     },
-                    () => {} // Ignorujeme chyby při skenování
+                    (errorMessage) => {
+                        // Ignorujeme běžné chyby skenování
+                        if (!errorMessage.includes("No barcode detected")) {
+                            console.error(errorMessage);
+                        }
+                    }
                 );
                 
                 html5QrcodeScanner = html5QrCode;
