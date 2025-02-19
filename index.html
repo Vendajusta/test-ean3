@@ -23,7 +23,7 @@
             <option value="">Vyberte kameru...</option>
         </select>
     </div>
-    <button onclick="startScanner()">Naskenovaaaaaat produkt</button>
+    <button onclick="startScanner()">Naskendfdfovat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -41,54 +41,41 @@
     <script>
         let database = {};
         
-        // Upravíme URL pro získání čistého CSV
-        // Nahraďte XXXX-XXXX vaším skutečným ID dokumentu
-        const SHEET_ID = '1vTFKCUkz_etTLnONxyS8YN9UzBS5wq3xlC7cXZ';
-        const SHEET_URL = `https://docs.google.com/spreadsheets/d/1nLtQavnR8Zy4UyFiQqisnulks1epEmSXPgkgetOcS-M/gviz/tq?tqx=out:csv`;
+        // Nahraďte toto URL adresou vaší publikované tabulky
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFKCUkz_etTLnONxyS8YN9UzBS5wq3xlC7cXZ-St4Ji-dBwF-k7KTA6J-OkdOJQ-9ibCnVFtWzVBh3/pub?gid=0&single=true&output=csv';
 
         async function loadDatabase() {
             try {
-                console.log('Načítám data z:', SHEET_URL);
-                const response = await fetch(SHEET_URL, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'text/csv',
-                    }
-                });
-
+                const response = await fetch(SHEET_URL);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error('Nelze načíst data');
                 }
                 
-                const csvText = await response.text();
-                console.log('Získaná data:', csvText); // Pro debugování
-                
-                // Očistíme data a zpracujeme CSV
-                const rows = csvText
+                const text = await response.text();
+                const rows = text
                     .split('\n')
                     .map(row => row.trim())
-                    .filter(row => row && row.length > 0)
-                    .slice(1); // Přeskočit hlavičku
+                    .filter(row => row.length > 0);
                 
-                database = {};
-                rows.forEach(row => {
-                    // Odstranění uvozovek z CSV
-                    const [code, name] = row
-                        .split(',')
-                        .map(cell => cell.replace(/^"(.*)"$/, '$1').trim());
-                    
+                // Přeskočíme první řádek (hlavičky)
+                for (let i = 1; i < rows.length; i++) {
+                    const [code, name] = rows[i].split(',').map(cell => 
+                        cell.replace(/^"(.*)"$/, '$1').trim() // Odstraní uvozovky
+                    );
                     if (code && name) {
                         database[code] = name;
                     }
-                });
+                }
                 
-                console.log('Načtená databáze:', database);
-                if (Object.keys(database).length === 0) {
+                const count = Object.keys(database).length;
+                console.log(`Načteno ${count} položek:`, database);
+                
+                if (count === 0) {
                     throw new Error('Databáze je prázdná');
                 }
             } catch (error) {
-                console.error('Chyba při načítání:', error);
-                alert(`Chyba při načítání databáze: ${error.message}\nZkuste obnovit stránku.`);
+                console.error('Chyba načítání:', error);
+                alert('Nepodařilo se načíst databázi produktů');
             }
         }
 
