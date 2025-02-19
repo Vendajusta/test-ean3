@@ -23,7 +23,7 @@
             <option value="">Vyberte kameru...</option>
         </select>
     </div>
-    <button onclick="startScanner()">Naskovat produkt</button>
+    <button onclick="startScanner()">Naskenovat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -215,13 +215,25 @@
 
         // Upravíme export do CSV
         function exportTableToCSV() {
-            let csv = "Kód,Název,Cena,Počet\n";
+            // Přidáme BOM pro správné rozpoznání UTF-8 v Excelu
+            let csv = '\uFEFF';
+            csv += "Kód,Název,Cena,Počet\n";
+            
             document.querySelectorAll("#product-table tr").forEach(row => {
                 let cols = row.querySelectorAll("td");
-                let data = [...cols].map(col => col.innerText).join(",");
+                let data = [...cols].map(col => {
+                    // Obalíme hodnoty uvozovkami a ošetříme případné uvozovky v textu
+                    let value = col.innerText.replace(/"/g, '""');
+                    return `"${value}"`;
+                }).join(",");
                 csv += data + "\n";
             });
-            let blob = new Blob([csv], { type: "text/csv" });
+
+            // Vytvoříme blob s správným typem a kódováním
+            let blob = new Blob([csv], { 
+                type: 'text/csv;charset=utf-8'
+            });
+            
             let a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
             a.download = "sklad.csv";
