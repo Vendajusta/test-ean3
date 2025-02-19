@@ -21,7 +21,7 @@
             width: 100%; 
             border-collapse: collapse; 
             margin-top: 10px;
-            min-width: 800px; /* Minimální šířka tabulky */
+            min-width: 900px; /* Zvětšíme minimální šířku tabulky */
         }
         th, td { 
             border: 1px solid #000; 
@@ -30,10 +30,15 @@
             overflow: visible; /* Zajistí, že obsah nebude oříznut */
         }
         /* Upravíme šířky sloupců pro lepší čitelnost */
-        th:nth-child(1), td:nth-child(1) { width: 35%; } /* Kód - širší */
+        th:nth-child(1), td:nth-child(1) { 
+            width: 40%; /* Širší sloupec pro EAN */
+            font-family: monospace; /* Pro lepší čitelnost čísel */
+            font-size: 16px; /* Větší písmo pro kódy */
+            letter-spacing: 1px; /* Mezery mezi číslicemi */
+        }
         th:nth-child(2), td:nth-child(2) { width: 35%; } /* Název */
         th:nth-child(3), td:nth-child(3) { width: 15%; } /* Cena */
-        th:nth-child(4), td:nth-child(4) { width: 15%; } /* Počet */
+        th:nth-child(4), td:nth-child(4) { width: 10%; } /* Počet */
 
         /* Pro mobilní zařízení přidáme horizontální scrollování */
         @media (max-width: 1000px) {
@@ -228,8 +233,19 @@
             }
         }
 
+        function normalizeEAN(code) {
+            // Odstraníme všechny nečíselné znaky a zajistíme délku 14 znaků
+            let numbers = code.replace(/[^0-9]/g, '');
+            // Doplníme nulami zleva, pokud je kód kratší než 14 znaků
+            while (numbers.length < 14) {
+                numbers = '0' + numbers;
+            }
+            // Vezmeme posledních 14 číslic, pokud je kód delší
+            return numbers.slice(-14);
+        }
+
         function addProduct(code, name, quantity) {
-            const normalizedCode = code.replace(/[^0-9]/g, '');
+            const normalizedCode = normalizeEAN(code);
             const product = database[normalizedCode];
             
             if (product) {
