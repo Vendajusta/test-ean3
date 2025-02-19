@@ -23,7 +23,7 @@
             <option value="">Vyberte kameru...</option>
         </select>
     </div>
-    <button onclick="startScanner()">skenovat produkt</button>
+    <button onclick="startScanner()">Naovat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -215,38 +215,29 @@
 
         // Upravíme export do CSV
         function exportTableToCSV() {
-            // Hlavička s BOM
-            const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
-            
-            // Sestavíme CSV data
-            let rows = ["Kód;Název;Cena;Počet"];  // Používáme středník místo čárky
-            
+            // Vytvoříme obsah CSV přímo v Excel formátu
+            let csvContent = 'sep=;\n';  // Excel oddělovač
+            csvContent += 'Kód;Název;Cena;Počet\n';  // Hlavička
+
+            // Přidáme řádky
             document.querySelectorAll("#product-table tr").forEach(row => {
-                let cols = row.querySelectorAll("td");
-                let rowData = [...cols].map(col => {
-                    // Ošetříme text pro CSV (obalíme uvozovkami pokud obsahuje středník)
-                    let text = col.innerText.trim();
-                    return text.includes(';') ? `"${text}"` : text;
-                }).join(';');  // Spojíme středníkem
-                rows.push(rowData);
+                const cols = row.querySelectorAll("td");
+                const rowData = Array.from(cols)
+                    .map(col => col.innerText.replace(/;/g, ','))  // nahradíme středníky čárkami
+                    .join(';');
+                csvContent += rowData + '\n';
             });
 
-            // Spojíme řádky s Windows konci řádků (\r\n)
-            const csvContent = rows.join('\r\n');
-            
-            // Vytvoříme Blob s BOM a správným typem
-            const blob = new Blob([BOM, csvContent], {
-                type: 'application/csv;charset=utf-8'
+            // Vytvoříme Blob s českým kódováním
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], {
+                type: 'text/csv;charset=utf-8'
             });
-            
+
             // Stáhneme soubor
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'sklad.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(a.href);
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'sklad.csv';
+            link.click();
         }
     </script>
 </body>
