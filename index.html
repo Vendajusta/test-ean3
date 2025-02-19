@@ -81,14 +81,16 @@
 </head>
 <body>
     <h2>Skladový skener</h2>
-    <button onclick="startScanner()">Naskenovat produkt</button>
-    <button onclick="showCameraSelect()" style="margin-left: 10px;">Změnit kameru</button>
+    <div style="margin-bottom: 15px;">
+        <button onclick="startScanner()" style="margin-right: 15px;">Naskenovat produkt</button>
+        <button onclick="stopScanner()" id="stop-button" style="display: none; margin-right: 15px;">Ukončit skenování</button>
+        <button onclick="showCameraSelect()">Změnit kameru</button>
+    </div>
     <div id="camera-select" style="display: none; margin: 10px 0;">
         <select id="cameras" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
     </div>
-    <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <!-- Obalíme tabulku div elementem pro scrollování na mobilu -->
     <div class="table-container">
@@ -186,9 +188,9 @@
                 await html5QrCode.start(
                     cameraId,
                     {
-                        fps: 5,
+                        fps: 10,
                         qrbox: { width: 250, height: 100 },
-                        aspectRatio: 1,
+                        aspectRatio: 1.0,
                         formatsToSupport: [
                             Html5QrcodeSupportedFormats.EAN_13,
                             Html5QrcodeSupportedFormats.EAN_8
@@ -219,7 +221,7 @@
                 html5QrcodeScanner = html5QrCode;
             } catch (err) {
                 console.error('Detailní chyba:', err);
-                alert('Chyba při spouštění kamery: ' + err);
+                alert('Chyba při spouštění kamery. Zkuste obnovit stránku nebo povolit přístup ke kameře v nastavení prohlížeče.');
             }
         }
 
@@ -230,30 +232,36 @@
 
         async function startScanner() {
             try {
-                const cameras = await Html5Qrcode.getCameras();
-                console.log("Dostupné kamery:", cameras); // Pro debugování
-
-                // Prioritizovaný seznam klíčových slov pro zadní kameru
-                const backKeywords = ['back', 'zadní', 'rear', '1', '2', 'main', 'wide'];
+                // Nejprve požádáme o přístup ke kameře
+                await navigator.mediaDevices.getUserMedia({ video: true });
                 
-                // Najdeme zadní kameru podle klíčových slov
-                let backCamera = null;
-                for (const keyword of backKeywords) {
-                    backCamera = cameras.find(camera => 
-                        camera.label.toLowerCase().includes(keyword.toLowerCase())
-                    );
-                    if (backCamera) break;
+                const cameras = await Html5Qrcode.getCameras();
+                if (cameras.length === 0) {
+                    throw new Error('Nenalezeny žádné kamery');
                 }
 
-                // Pokud není nalezena podle klíčových slov, vezmeme poslední kameru
-                // (často je to ta zadní)
-                const cameraId = backCamera ? backCamera.id : cameras[cameras.length - 1].id;
-                console.log("Vybraná kamera:", cameras.find(c => c.id === cameraId).label);
-                
-                startScannerWithCamera(cameraId);
+                console.log("Dostupné kamery:", cameras);
+
+                // Vybereme zadní kameru
+                let selectedCamera = cameras[cameras.length - 1]; // Výchozí volba - poslední kamera
+
+                // Pokusíme se najít zadní kameru
+                for (const camera of cameras) {
+                    const label = camera.label.toLowerCase();
+                    if (label.includes('back') || 
+                        label.includes('zadní') || 
+                        label.includes('rear') ||
+                        label.includes('environment')) {
+                        selectedCamera = camera;
+                        break;
+                    }
+                }
+
+                console.log("Vybraná kamera:", selectedCamera.label);
+                startScannerWithCamera(selectedCamera.id);
             } catch (err) {
-                console.error('Chyba při hledání kamer:', err);
-                alert('Nelze najít kameru. Zkontrolujte oprávnění.');
+                console.error('Chyba přístupu ke kameře:', err);
+                alert('Nelze získat přístup ke kameře. Zkontrolujte oprávnění v nastavení prohlížeče.');
             }
         }
 
