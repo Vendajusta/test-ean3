@@ -81,13 +81,13 @@
 </head>
 <body>
     <h2>Skladový skener</h2>
-    <div id="camera-select" style="margin: 10px 0;">
-        <button onclick="listCameras()">Vybrat kameru</button>
-        <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
+    <button onclick="startScanner()">Naskenovat produkt</button>
+    <button onclick="showCameraSelect()" style="margin-left: 10px;">Změnit kameru</button>
+    <div id="camera-select" style="display: none; margin: 10px 0;">
+        <select id="cameras" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
     </div>
-    <button onclick="startScanner()">Naskenovat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <!-- Obalíme tabulku div elementem pro scrollování na mobilu -->
@@ -223,8 +223,29 @@
             }
         }
 
-        function startScanner() {
+        function showCameraSelect() {
             listCameras();
+            document.getElementById('camera-select').style.display = 'block';
+        }
+
+        async function startScanner() {
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                // Najdeme zadní kameru
+                const backCamera = cameras.find(camera => 
+                    camera.label.toLowerCase().includes('back') ||
+                    camera.label.toLowerCase().includes('zadní') ||
+                    camera.label.includes('2') ||
+                    camera.label.includes('1')
+                );
+                
+                // Použijeme nalezenou zadní kameru nebo první dostupnou
+                const cameraId = backCamera ? backCamera.id : cameras[0].id;
+                startScannerWithCamera(cameraId);
+            } catch (err) {
+                console.error('Chyba při hledání kamer:', err);
+                alert('Nelze najít kameru. Zkontrolujte oprávnění.');
+            }
         }
 
         function stopScanner() {
