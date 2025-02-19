@@ -23,7 +23,7 @@
             <option value="">Vyberte kameru...</option>
         </select>
     </div>
-    <button onclick="startScanner()">Naskat produkt</button>
+    <button onclick="startScanner()">Naskenovdfdfdfat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -76,24 +76,22 @@
                     .filter(row => row.length > 0);
                 
                 database = {};
-                // Začínáme od 1 pro přeskočení hlavičky
                 for (let i = 1; i < rows.length; i++) {
                     const [code, name] = rows[i].split(',').map(cell => 
-                        cell.replace(/^"(.*)"$/, '$1').trim()
+                        cell.replace(/['"]/g, '').trim() // Odstraníme všechny uvozovky a mezery
                     );
                     if (code && name) {
-                        database[code] = name;
+                        // Normalizujeme EAN kód (odstraníme mezery a další znaky)
+                        const normalizedCode = code.replace(/[^0-9]/g, '');
+                        database[normalizedCode] = name;
+                        debugLog(`Přidávám: [${normalizedCode}] = "${name}"`);
                     }
                 }
                 
-                debugLog(`Načteno ${Object.keys(database).length} položek`);
-                debugLog('První 3 položky:');
-                Object.entries(database).slice(0, 3).forEach(([code, name]) => {
-                    debugLog(`${code}: ${name}`);
-                });
+                debugLog(`Celkem načteno ${Object.keys(database).length} položek`);
             } catch (error) {
                 debugLog(`CHYBA: ${error.message}`);
-                alert('Nepodařilo se načíst databázi produktů. Zkontrolujte připojení k internetu.');
+                alert('Nepodařilo se načíst databázi produktů');
             }
         }
 
@@ -187,7 +185,20 @@
         }
 
         function addProduct(code, name, quantity) {
-            let row = `<tr><td>${code}</td><td>${name}</td><td>${quantity}</td></tr>`;
+            // Normalizujeme naskenovaný kód
+            const normalizedCode = code.replace(/[^0-9]/g, '');
+            debugLog(`Hledám kód: [${normalizedCode}]`);
+            debugLog(`Dostupné kódy: ${Object.keys(database).join(', ')}`);
+            
+            // Zkusíme najít produkt
+            const productName = database[normalizedCode];
+            if (!productName) {
+                debugLog(`Kód [${normalizedCode}] nenalezen v databázi!`);
+            } else {
+                debugLog(`Nalezen produkt: ${productName}`);
+            }
+
+            let row = `<tr><td>${normalizedCode}</td><td>${name}</td><td>${quantity}</td></tr>`;
             document.getElementById("product-table").innerHTML += row;
         }
 
