@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skladový skener</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <style>
+        #scanner-container { 
+            width: 100%; 
+            max-width: 640px; 
+            margin: auto; 
+            position: relative; 
+        }
+        video {
+            width: 100%;
+        }
+        #interactive.viewport { 
+            position: relative;
+            width: 100%;
+            height: 300px; 
+        }
+        #interactive.viewport > canvas, #interactive.viewport > video {
+            max-width: 100%;
+            width: 100%;
+        }
+        #interactive.viewport canvas.drawing, #interactive.viewport canvas.drawingBuffer {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+        .laser {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: red;
+            z-index: 11;
+            box-shadow: 0 0 4px red;
+            animation: scan 2s infinite;
+        }
+        @keyframes scan {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+    </style>
+</head>
+<body>
+    <h2>Skladový skener</h2>
+    <button onclick="startScanner()">Naskenovat produkt</button>
+    <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
+    <div id="scanner-container"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>Kód</th>
+                <th>Název</th>
+                <th>Počet</th>
+            </tr>
+        </thead>
+        <tbody id="product-table"></tbody>
+    </table>
+    <button onclick="exportTableToCSV()">Exportovat do CSV</button>
+    
+    <script>
+        const database = {
+            "8594003118106": "Mléko 1L",
+            "4006381333931": "Fix Stabilo",
+            "8593893752012": "Chléb"
+        };
+
+        // Přidáme proměnnou pro sledování posledního kódu
+        let lastCode = null;
+        let lastTime = 0;
+
+        function startScanner() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert("Váš prohlížeč nepodporuje přístup ke kameře");
+                return;
+            }
+
+            const scannerContainer = document.getElementById('scanner-container');
+            scannerContainer.style.display = 'block';
+            document.getElementById('stop-button').style.display = 'inline';
+            
+            // Přidáme overlay a laser efekt
+            scannerContainer.innerHTML = '<div class="scanner-overlay"><div class="laser"></div></div>';
+            
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: scannerContainer,
+                    constraints: {
+                        facingMode: "environment",
+                        width: 1280,
+                        height: 720,
+                        aspectRatio: { min: 1, max: 2 },
+                        focusMode: "continuous",
+                        advanced: [{
+                            zoom: 2
+                        }]
+                    }
+                },
+                locator: {
+                    patchSize: "large",
+                    halfSample: false
+                },
+                numOfWorkers: 4,
+                decoder: {
+                    readers: ["ean_reader", "ean_8_reader"],
+                    multiple: false,
+                    debug: true,
+                    freq: 10
+                },
+                locate: true
+            }, function(err) {
+                if (err) {
+                    alert("Chyba při spouštění kamery. Ujistěte se, že jste povolili přístup ke kameře.");
+                    return;
+                }
+                Quagga.start();
+            });
+
+            // Přidáme nastavení jasu a kontrastu
+            const track = Quagga.CameraAccess.getActiveTrack();
+            if (track && typeof track.applyConstraints === 'function') {
+                track.applyConstraints({
+                    advanced: [{
+                        brightness: 2,
+                        contrast: 2,
+                        sharpness: 2,
+                        focusDistance: 0.5,
+                        exposureMode: "continuous",
+                        whiteBalanceMode: "continuous"
+                    }]
+                });
+            }
+
+            Quagga.onDetected(function(result) {
+                const code = result.codeResult.code;
+                const now = Date.now();
+                
+                // Kontrola kvality a prevence duplicit
+                if (result.codeResult.decodedCodes.some(x => x.error !== undefined)) {
+                    return;
+                }
+                
+                // Ignorujeme stejný kód po dobu 2 sekund
+                if (code === lastCode && now - lastTime < 2000) {
+                    return;
+                }
+
+                // Přehrajeme zvuk při úspěšném naskenování
+                const beep = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1NOTQrHxsVDwwLCgoLDRIWHy89VH2dwejSv72vjoNvU0MzJRoRCgQBAAEDBQoRHD5Zc5a/3u/t7OlILhEGAAAAAAAAAAAABRQsQ1BYVBYDAAAAAAAABx4vP0hLSjYaCwMAAAAAAQMFAwAAABUwTGR4jGRgWxIAAAAAAAAMFyIoIyckHRQOCAAAAAAAAAEAAAQ7TGmRo6xYOI95UzYnGhEODQ0MDBg6VnqcudHRspaAbl1INy0hGBEOCwgHCQwQFh4uQ1+Cq9Xs/vPdzqaNb1hELhwQBwQBAAABAwYLFSc8V3mjv8vG4snesFwiEgcDAgMCAQAAAQEAAAUJEBUbICIcDwUAAQMGCg0PEBmjw972/f/++OHAt5mAZ0s1IxYKAgAAAAAAAAADCRIbJSovMygjNExTY2dLLRcLAwAAAAAAAAEDCAoMDQ4MDAsTJjZGT0gfBQEBAQAAAAA9XXN1bGBhR0hXTDurv7rF4+3z+PX48fT145djUzQcBAAAAgHTI0RSOy0oJB4ZDwYAAAEAAAAAAAAADhwqNDo1Lzc9UmVgWkktGg0EAQAAAAAAAAYTGiAkKi80PUQ0IxsRCQcEAgEAAAAzXX+gr8zW3NTEq5BePhwFAAAAAAAAAAImNkBHRTkeIzM8RE5OQzkkGRAEAAA3PWFbYYGWjXxxbmhGMiUXEg0ICRYkMkRWaX2Tm6Gnt8TJ19vU1dzpQzQZBAAAAwAAABUyQE5YYmVZRy4fEQUAAAAAAAAAAAYUD0ZRWFdSSDkrGxILCgkJEBYeJzM+RkxEPzMrIh0XDQYAAAAAAAAAAAAlvMKyi1xALSEYDQQAAAAAAAAAAAAAAAYVJThNX25+eGNrb1xHOi4iGRMQCw0NDAwTGiQyRVlpeoiZrLm6trGporjC0MbDtKiim6Ceo6elp62pq7CutQ0KBgAAAABDbop2cH+MioJ6dG5lVkQvHREOCwAAAAAAAAAAADRGWWp8jZyvvsTDeVdAJRQDbZWxx9Lc5/IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                beep.play();
+
+                lastCode = code;
+                lastTime = now;
+                
+                processBarcode(result);
+            });
+        }
+
+        function stopScanner() {
+            Quagga.stop();
+            document.getElementById('scanner-container').style.display = 'none';
+            document.getElementById('stop-button').style.display = 'none';
+        }
+
+        function processBarcode(result) {
+            const code = result.codeResult.code;
+            let name = database[code] || "Neznámý produkt";
+            let quantity = prompt(`Zadej počet kusů pro ${name} (${code}):`, 1);
+            if (quantity) addProduct(code, name, quantity);
+            // Necháme skener běžet dál, dokud uživatel neklikne na "Ukončit skenování"
+        }
+
+        function addProduct(code, name, quantity) {
+            let row = `<tr><td>${code}</td><td>${name}</td><td>${quantity}</td></tr>`;
+            document.getElementById("product-table").innerHTML += row;
+        }
+
+        function exportTableToCSV() {
+            let csv = "Kód,Název,Počet\n";
+            document.querySelectorAll("#product-table tr").forEach(row => {
+                let cols = row.querySelectorAll("td");
+                let data = [...cols].map(col => col.innerText).join(",");
+                csv += data + "\n";
+            });
+            let blob = new Blob([csv], { type: "text/csv" });
+            let a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "sklad.csv";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
