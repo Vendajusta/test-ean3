@@ -17,7 +17,13 @@
 </head>
 <body>
     <h2>Skladový skener</h2>
-    <button onclick="startScanner()">Naskenovvvvat produkt</button>
+    <div id="camera-select" style="margin: 10px 0;">
+        <button onclick="listCameras()">Vybrat kameru</button>
+        <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
+            <option value="">Vyberte kameru...</option>
+        </select>
+    </div>
+    <button onclick="startScanner()">Naskenovat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -74,37 +80,53 @@
         let lastCode = null;
         let lastTime = 0;
 
-        async function startScanner() {
-            if (Object.keys(database).length === 0) {
-                await loadDatabase(); // Zkusíme znovu načíst pokud není načtená
+        async function listCameras() {
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                const select = document.getElementById('cameras');
+                select.innerHTML = '<option value="">Vyberte kameru...</option>';
+                
+                cameras.forEach(camera => {
+                    const option = document.createElement('option');
+                    option.value = camera.id;
+                    option.text = camera.label;
+                    select.appendChild(option);
+                });
+                
+                select.style.display = 'block';
+                console.log('Dostupné kamery:', cameras);
+            } catch (err) {
+                alert('Chyba při hledání kamer: ' + err);
             }
+        }
+
+        async function startScannerWithCamera(cameraId) {
+            if (!cameraId) return;
             
+            if (html5QrcodeScanner) {
+                await html5QrcodeScanner.stop();
+            }
+
             const html5QrCode = new Html5Qrcode("reader");
             document.getElementById('stop-button').style.display = 'inline';
 
             try {
                 await html5QrCode.start(
-                    { facingMode: { exact: "environment" } }, // Přímo vynutíme zadní kameru
+                    cameraId,
                     {
-                        fps: 10,
+                        fps: 5,
                         qrbox: { width: 250, height: 100 },
-                        aspectRatio: 4/3, // Změněno pro lepší poměr stran
+                        aspectRatio: 1,
                         formatsToSupport: [
                             Html5QrcodeSupportedFormats.EAN_13,
                             Html5QrcodeSupportedFormats.EAN_8
-                        ],
-                        videoConstraints: {
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 },
-                            facingMode: { exact: "environment" },
-                            focusMode: "continuous"
-                        }
+                        ]
                     },
                     (decodedText) => {
                         const now = Date.now();
                         if (decodedText === lastCode && now - lastTime < 2000) return;
                         
-                        navigator.vibrate(100); // Přidáme vibraci pro lepší zpětnou vazbu
+                        navigator.vibrate(100);
                         new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
                         
                         lastCode = decodedText;
@@ -115,7 +137,6 @@
                         if (quantity) addProduct(decodedText, name, quantity);
                     },
                     (errorMessage) => {
-                        // Ignorujeme běžné chyby skenování
                         if (!errorMessage.includes("No barcode detected")) {
                             console.error(errorMessage);
                         }
@@ -125,8 +146,12 @@
                 html5QrcodeScanner = html5QrCode;
             } catch (err) {
                 console.error('Detailní chyba:', err);
-                alert('Chyba při spouštění kamery. Zkuste povolit přístup ke kameře nebo použít jiný prohlížeč.');
+                alert('Chyba při spouštění kamery: ' + err);
             }
+        }
+
+        function startScanner() {
+            listCameras();
         }
 
         function stopScanner() {
