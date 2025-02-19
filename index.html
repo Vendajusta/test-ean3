@@ -4,69 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skladový skener</title>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-         #scanner-container { 
-            width: 100%; 
-            max-width: 640px; 
-            margin: auto; 
-            position: relative; 
-        }
-        video {
+        #reader {
             width: 100%;
             max-width: 640px;
-        }
-        #interactive.viewport { 
-            position: relative;
-            width: 100%;
-            height: 300px; 
-        }
-        #interactive.viewport > canvas, #interactive.viewport > video {
-            max-width: 100%;
-            width: 100%;
-        }
-        #interactive.viewport canvas.drawing, #interactive.viewport canvas.drawingBuffer {
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
-        .controls {
-            margin: 10px 0;
+            margin: 0 auto;
         }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-        .scanner-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 10;
-        }
-        .laser {
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background: red;
-            z-index: 11;
-            box-shadow: 0 0 4px red;
-            animation: scan 2s infinite;
-        }
-        @keyframes scan {
-            0% { top: 0; }
-            50% { top: 100%; }
-            100% { top: 0; }
-        }
     </style>
 </head>
 <body>
     <h2>Skladový skener</h2>
-    <button onclick="startScanner()">Naskenovt produkt</button>
+    <button onclick="startScanner()">Naskenovat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
-    <div id="scanner-container">
-        <video id="video"></video>
-    </div>
+    <div id="reader"></div>
     <table>
         <thead>
             <tr>
@@ -78,7 +31,7 @@
         <tbody id="product-table"></tbody>
     </table>
     <button onclick="exportTableToCSV()">Exportovat do CSV</button>
-    
+
     <script>
         const database = {
             "8594003118106": "Mléko 1L",
@@ -86,70 +39,61 @@
             "8593893752012": "Chléb"
         };
 
-        let codeReader;
+        let html5QrcodeScanner;
         let lastCode = null;
         let lastTime = 0;
 
         async function startScanner() {
-            try {
-                codeReader = new ZXing.BrowserMultiFormatReader();
-                const videoInputDevices = await codeReader.listVideoInputDevices();
-                
-                // Najít zadní kameru
-                const backCamera = videoInputDevices.find(device => 
-                    device.label.toLowerCase().includes('back') || 
-                    device.label.toLowerCase().includes('zadní')
-                );
-                
-                const selectedDeviceId = backCamera ? backCamera.deviceId : videoInputDevices[0].deviceId;
+            const html5QrCode = new Html5Qrcode("reader");
+            document.getElementById('stop-button').style.display = 'inline';
 
-                document.getElementById('scanner-container').style.display = 'block';
-                document.getElementById('stop-button').style.display = 'inline';
-                
-                // Spustit dekódování s vysokým rozlišením
-                await codeReader.decodeFromVideoDevice(
-                    selectedDeviceId, 
-                    'video',
-                    (result, err) => {
-                        if (result) {
-                            const now = Date.now();
-                            if (result.text === lastCode && now - lastTime < 2000) {
-                                return;
-                            }
-                            
-                            // Přehrát zvuk při úspěšném skenování
-                            new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
-                            
-                            lastCode = result.text;
-                            lastTime = now;
-                            
-                            const code = result.text;
-                            let name = database[code] || "Neznámý produkt";
-                            let quantity = prompt(`Zadej počet kusů pro ${name} (${code}):`, 1);
-                            if (quantity) addProduct(code, name, quantity);
-                        }
-                    },
-                    {
-                        formats: ['EAN_13', 'EAN_8'],
-                        constraints: {
-                            width: { min: 1280, ideal: 1920 },
-                            height: { min: 720, ideal: 1080 },
-                            facingMode: "environment",
-                            focusMode: "continuous"
-                        }
-                    }
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                const backCamera = cameras.find(camera => 
+                    camera.label.toLowerCase().includes('back') ||
+                    camera.label.toLowerCase().includes('zadní')
                 );
+                
+                const cameraId = backCamera ? backCamera.id : cameras[0].id;
+
+                await html5QrCode.start(
+                    cameraId,
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 150 },
+                        aspectRatio: 1.777778,
+                        formatsToSupport: [
+                            Html5QrcodeSupportedFormats.EAN_13,
+                            Html5QrcodeSupportedFormats.EAN_8
+                        ]
+                    },
+                    (decodedText) => {
+                        const now = Date.now();
+                        if (decodedText === lastCode && now - lastTime < 2000) return;
+                        
+                        new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
+                        
+                        lastCode = decodedText;
+                        lastTime = now;
+                        
+                        let name = database[decodedText] || "Neznámý produkt";
+                        let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
+                        if (quantity) addProduct(decodedText, name, quantity);
+                    },
+                    () => {} // Ignorujeme chyby při skenování
+                );
+                
+                html5QrcodeScanner = html5QrCode;
             } catch (err) {
-                console.error(err);
                 alert('Chyba při spouštění kamery: ' + err);
             }
         }
 
         function stopScanner() {
-            if (codeReader) {
-                codeReader.reset();
-                document.getElementById('scanner-container').style.display = 'none';
-                document.getElementById('stop-button').style.display = 'none';
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    document.getElementById('stop-button').style.display = 'none';
+                });
             }
         }
 
