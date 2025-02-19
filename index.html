@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skladový skener</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         #reader {
             width: 100%;
@@ -23,7 +24,7 @@
             <option value="">Vyberte kameru...</option>
         </select>
     </div>
-    <button onclick="startScanner()">Naovat produkt</button>
+    <button onclick="startScanner()">Naskenot produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -215,29 +216,27 @@
 
         // Upravíme export do CSV
         function exportTableToCSV() {
-            // Vytvoříme obsah CSV přímo v Excel formátu
-            let csvContent = 'sep=;\n';  // Excel oddělovač
-            csvContent += 'Kód;Název;Cena;Počet\n';  // Hlavička
-
-            // Přidáme řádky
+            // Vytvoříme workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Získáme data z tabulky
+            const data = [['Kód', 'Název', 'Cena', 'Počet']];
             document.querySelectorAll("#product-table tr").forEach(row => {
-                const cols = row.querySelectorAll("td");
-                const rowData = Array.from(cols)
-                    .map(col => col.innerText.replace(/;/g, ','))  // nahradíme středníky čárkami
-                    .join(';');
-                csvContent += rowData + '\n';
+                const rowData = [];
+                row.querySelectorAll("td").forEach(cell => {
+                    rowData.push(cell.innerText);
+                });
+                data.push(rowData);
             });
 
-            // Vytvoříme Blob s českým kódováním
-            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], {
-                type: 'text/csv;charset=utf-8'
-            });
+            // Vytvoříme worksheet
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            // Přidáme worksheet do workbooku
+            XLSX.utils.book_append_sheet(wb, ws, "Sklad");
 
-            // Stáhneme soubor
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'sklad.csv';
-            link.click();
+            // Stáhneme Excel soubor
+            XLSX.writeFile(wb, "sklad.xlsx");
         }
     </script>
 </body>
