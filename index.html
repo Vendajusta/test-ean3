@@ -17,7 +17,7 @@
 </head>
 <body>
     <h2>Skladový skener</h2>
-    <button onclick="startScanner()">Naskenopoovat produkt</button>
+    <button onclick="startScanner()">Naskenovvvvat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -83,19 +83,8 @@
             document.getElementById('stop-button').style.display = 'inline';
 
             try {
-                const cameras = await Html5Qrcode.getCameras();
-                
-                // Vylepšený výběr kamery - hledáme primární zadní kameru
-                const backCamera = cameras.find(camera => {
-                    const label = camera.label.toLowerCase();
-                    return (label.includes('back') || label.includes('zadní')) && 
-                           !label.includes('wide') && 
-                           !label.includes('ultra') && 
-                           !label.includes('široký');
-                }) || cameras[0];
-
                 await html5QrCode.start(
-                    backCamera.deviceId,
+                    { facingMode: { exact: "environment" } }, // Přímo vynutíme zadní kameru
                     {
                         fps: 10,
                         qrbox: { width: 250, height: 100 },
@@ -105,17 +94,10 @@
                             Html5QrcodeSupportedFormats.EAN_8
                         ],
                         videoConstraints: {
-                            deviceId: backCamera.deviceId,
                             width: { ideal: 1280 },
                             height: { ideal: 720 },
-                            facingMode: "environment",
-                            focusMode: "continuous",
-                            advanced: [{
-                                zoom: 1.5,
-                                // Vypneme širokoúhlý režim
-                                resizeMode: "none",
-                                deviceId: { exact: backCamera.deviceId }
-                            }]
+                            facingMode: { exact: "environment" },
+                            focusMode: "continuous"
                         }
                     },
                     (decodedText) => {
@@ -140,7 +122,6 @@
                     }
                 );
                 
-                console.log('Používaná kamera:', backCamera.label);
                 html5QrcodeScanner = html5QrCode;
             } catch (err) {
                 console.error('Detailní chyba:', err);
@@ -150,6 +131,9 @@
 
         function stopScanner() {
             if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    document.getElementById('stop-button').style.display = 'none';
+                });
             }
         }
 
