@@ -23,7 +23,7 @@
             <option value="">Vyberte kameru...</option>
         </select>
     </div>
-    <button onclick="startScanner()">Novat produkt</button>
+    <button onclick="startScanner()">Naskovat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -164,7 +164,8 @@
                         lastCode = decodedText;
                         lastTime = now;
                         
-                        let name = database[decodedText] || "Neznámý produkt";
+                        let product = database[decodedText];
+                        let name = product ? product.name : "Neznámý produkt";
                         let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
                         if (quantity) addProduct(decodedText, name, quantity);
                     },
