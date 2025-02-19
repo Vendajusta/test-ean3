@@ -31,14 +31,14 @@
         }
         /* Upravíme šířky sloupců pro lepší čitelnost */
         th:nth-child(1), td:nth-child(1) { 
-            width: 45%; /* Širší sloupec pro EAN */
+            width: 40%; /* Širší sloupec pro EAN */
             font-family: monospace; /* Pro lepší čitelnost čísel */
             font-size: 16px; /* Větší písmo pro kódy */
             letter-spacing: 1px; /* Mezery mezi číslicemi */
         }
         th:nth-child(2), td:nth-child(2) { width: 35%; } /* Název */
         th:nth-child(3), td:nth-child(3) { width: 15%; } /* Cena */
-        th:nth-child(4), td:nth-child(4) { width: 5%; } /* Počet */
+        th:nth-child(4), td:nth-child(4) { width: 10%; } /* Počet */
 
         /* Pro mobilní zařízení přidáme horizontální scrollování */
         @media (max-width: 1000px) {
@@ -287,18 +287,13 @@
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
             
-            // Získáme aktuální datum ve formátu DD-MM-YYYY
             const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-            const dateStr = `${dd}-${mm}-${yyyy}`;
+            const dateStr = today.toLocaleDateString('cs-CZ').replace(/\s/g, '');
             
             const data = [['Kód', 'Název', 'Cena', 'Počet']];
             document.querySelectorAll("#product-table tr").forEach(row => {
                 const rowData = [];
                 row.querySelectorAll("td").forEach((cell, index) => {
-                    // Pro sloupec s množstvím bereme pouze číslo, ne tlačítko
                     if (index === 3) {
                         rowData.push(cell.querySelector('.quantity-value').innerText);
                     } else {
@@ -309,9 +304,16 @@
             });
 
             const ws = XLSX.utils.aoa_to_sheet(data);
-            XLSX.utils.book_append_sheet(wb, ws, "Sklad");
 
-            // Vytvoříme název souboru s aktuálním datem
+            // Nastavíme šířky sloupců (v jednotkách znaků)
+            ws['!cols'] = [
+                {wch: 20},  // Kód - široký sloupec pro EAN
+                {wch: 40},  // Název
+                {wch: 10},  // Cena
+                {wch: 8}    // Počet
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             const fileName = `vypis_${dateStr}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
