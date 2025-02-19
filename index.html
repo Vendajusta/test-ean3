@@ -23,7 +23,7 @@
             <option value="">Vyberte kameru...</option>
         </select>
     </div>
-    <button onclick="startScanner()">Naskenovdfdfdfat produkt</button>
+    <button onclick="startScanner()">Novat produkt</button>
     <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     <div id="reader"></div>
     <table>
@@ -31,6 +31,7 @@
             <tr>
                 <th>Kód</th>
                 <th>Název</th>
+                <th>Cena</th>
                 <th>Počet</th>
             </tr>
         </thead>
@@ -45,6 +46,7 @@
     </div>
 
     <script>
+        // Upravíme strukturu databáze pro ukládání více informací
         let database = {};
         
         // Přímý odkaz na CSV
@@ -76,15 +78,23 @@
                     .filter(row => row.length > 0);
                 
                 database = {};
+                // Přeskočíme první řádek (hlavičku)
                 for (let i = 1; i < rows.length; i++) {
-                    const [code, name] = rows[i].split(',').map(cell => 
-                        cell.replace(/['"]/g, '').trim() // Odstraníme všechny uvozovky a mezery
-                    );
-                    if (code && name) {
-                        // Normalizujeme EAN kód (odstraníme mezery a další znaky)
-                        const normalizedCode = code.replace(/[^0-9]/g, '');
-                        database[normalizedCode] = name;
-                        debugLog(`Přidávám: [${normalizedCode}] = "${name}"`);
+                    // Rozdělíme řádek na sloupce (kód, název, cena)
+                    const parts = rows[i].split(/[,\t]+|\s{2,}/);
+                    if (parts.length >= 3) {
+                        const code = parts[0]?.replace(/['"]/g, '').trim();
+                        const name = parts[1]?.replace(/['"]/g, '').trim();
+                        const price = parts[2]?.replace(/['"]/g, '').trim();
+                        
+                        if (code && name) {
+                            const normalizedCode = code.replace(/[^0-9]/g, '');
+                            database[normalizedCode] = {
+                                name: name,
+                                price: price
+                            };
+                            debugLog(`Přidávám: [${normalizedCode}] = "${name}" (${price} Kč)`);
+                        }
                     }
                 }
                 
@@ -184,26 +194,27 @@
             }
         }
 
+        // Upravíme funkci pro přidání produktu
         function addProduct(code, name, quantity) {
-            // Normalizujeme naskenovaný kód
             const normalizedCode = code.replace(/[^0-9]/g, '');
-            debugLog(`Hledám kód: [${normalizedCode}]`);
-            debugLog(`Dostupné kódy: ${Object.keys(database).join(', ')}`);
+            const product = database[normalizedCode];
             
-            // Zkusíme najít produkt
-            const productName = database[normalizedCode];
-            if (!productName) {
-                debugLog(`Kód [${normalizedCode}] nenalezen v databázi!`);
+            if (product) {
+                name = product.name;
+                const price = product.price;
+                let row = `<tr><td>${normalizedCode}</td><td>${name}</td><td>${price}</td><td>${quantity}</td></tr>`;
+                document.getElementById("product-table").innerHTML += row;
+                debugLog(`Přidán produkt: ${name} (${price} Kč) - ${quantity}x`);
             } else {
-                debugLog(`Nalezen produkt: ${productName}`);
+                let row = `<tr><td>${normalizedCode}</td><td>Neznámý produkt</td><td>-</td><td>${quantity}</td></tr>`;
+                document.getElementById("product-table").innerHTML += row;
+                debugLog(`Neznámý produkt: ${normalizedCode}`);
             }
-
-            let row = `<tr><td>${normalizedCode}</td><td>${name}</td><td>${quantity}</td></tr>`;
-            document.getElementById("product-table").innerHTML += row;
         }
 
+        // Upravíme export do CSV
         function exportTableToCSV() {
-            let csv = "Kód,Název,Počet\n";
+            let csv = "Kód,Název,Cena,Počet\n";
             document.querySelectorAll("#product-table tr").forEach(row => {
                 let cols = row.querySelectorAll("td");
                 let data = [...cols].map(col => col.innerText).join(",");
