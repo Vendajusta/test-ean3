@@ -195,6 +195,9 @@
             }
         }
 
+        // Přidáme proměnnou pro uložení instance kamery
+        let html5QrCode = null;
+
         async function startScannerWithCamera(cameraId) {
             if (!cameraId) return;
             
@@ -204,16 +207,16 @@
                 startButton.remove();
             }
 
-            lastUsedCameraId = cameraId; // Uložíme ID kamery
-
-            if (html5QrcodeScanner) {
-                await html5QrcodeScanner.stop();
-            }
-
-            const html5QrCode = new Html5Qrcode("reader");
-            document.getElementById('stop-button').style.display = 'inline';
+            lastUsedCameraId = cameraId;
 
             try {
+                if (html5QrCode) {
+                    await html5QrCode.stop();
+                }
+                
+                html5QrCode = new Html5Qrcode("reader");
+                document.getElementById('stop-button').style.display = 'inline';
+
                 await html5QrCode.start(
                     cameraId,
                     {
@@ -250,7 +253,7 @@
                 html5QrcodeScanner = html5QrCode;
             } catch (err) {
                 console.error('Detailní chyba:', err);
-                alert('Chyba při spouštění kamery. Zkuste obnovit stránku nebo povolit přístup ke kameře v nastavení prohlížeče.');
+                alert('Chyba při spouštění kamery: ' + err.message);
             }
         }
 
@@ -258,14 +261,19 @@
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => {
                     document.getElementById('stop-button').style.display = 'none';
-                    
-                    // Vytvoříme nové tlačítko pro start
                     const startButton = document.createElement('button');
                     startButton.id = 'start-button';
                     startButton.textContent = 'Začít skenovat';
-                    startButton.onclick = () => startScannerWithCamera(lastUsedCameraId);
+                    startButton.style.marginBottom = '10px';
+                    startButton.onclick = () => {
+                        if (lastUsedCameraId) {
+                            startScannerWithCamera(lastUsedCameraId);
+                        } else {
+                            alert('Prosím vyberte nejdřív kameru');
+                            listCameras();
+                        }
+                    };
                     
-                    // Vložíme ho před stop tlačítko
                     const stopButton = document.getElementById('stop-button');
                     stopButton.parentNode.insertBefore(startButton, stopButton);
                 });
