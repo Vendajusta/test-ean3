@@ -244,26 +244,21 @@
                         aspectRatio: 1.0
                     },
                     (decodedText) => {
-                        const now = Date.now();
-                        // Vibrujeme jen když je to nový kód (jiný než poslední) nebo uplynuly 2 sekundy
-                        if (decodedText !== lastCode || now - lastVibrateTime > 2000) {
-                            navigator.vibrate(200);
-                            lastVibrateTime = now;
-                        }
-
                         if (!scanning) return;
+            
+                        const now = Date.now();
                         if (decodedText === lastCode && now - lastTime < 2000) return;
+
+                        // Nejdřív vibrujeme
+                        navigator.vibrate(200);
                         
                         lastCode = decodedText;
                         lastTime = now;
                         
                         let product = database[decodedText];
-                        if (product) {
-                            new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
-                            let name = `${product.name} - ${product.text}`;
-                            let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
-                            if (quantity) addProduct(decodedText, name, quantity);
-                        }
+                        let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
+                        let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
+                        if (quantity) addProduct(decodedText, name, quantity);
                     },
                     (errorMessage) => {
                         if (!errorMessage.includes("No barcode detected")) {
