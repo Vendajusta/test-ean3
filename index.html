@@ -137,7 +137,7 @@
                 const text = await response.text();
                 debugStatus.textContent = 'Zpracovávám data...';
                 
-                // Vylepšené parsování CSV
+                // Nejdřív rozdělíme na řádky a odfiltrujeme prázdné
                 const rows = text.split('\n')
                     .map(row => row.trim())
                     .filter(row => row.length > 0);
@@ -145,34 +145,39 @@
                 database = {};
                 let processedCount = 0;
                 
-                // Vylepšené rozdělení řádků
+                // Upravené parsování řádků
                 for (let i = 1; i < rows.length; i++) {
-                    // Nejdřív rozdělíme podle tabulátorů
-                    let parts = rows[i].split('\t');
-                    
-                    // Pokud nemáme dostatek částí, zkusíme rozdělit podle čárek
-                    if (parts.length < 6) {
-                        parts = rows[i].split(',');
-                    }
-
-                    if (parts.length >= 6) {
-                        const intCode = parts[0]?.replace(/['"]/g, '').trim();
-                        const name = parts[1]?.replace(/['"]/g, '').trim();
-                        const text = parts[2]?.replace(/['"]/g, '').trim();
-                        const price = parts[4]?.replace(/['"]/g, '').trim();
-                        const ean = parts[5]?.replace(/['"]/g, '').trim();
+                    try {
+                        // Rozdělíme pouze podle tabulátoru, který by měl být bezpečným oddělovačem
+                        let parts = rows[i].split('\t');
                         
-                        if (ean && ean.length > 0) {
-                            database[ean] = {
-                                intCode: intCode || '-',
-                                name: name || 'Neznámý produkt',
-                                text: text || '',
-                                price: price || '-'
-                            };
+                        // Pokud nemáme dostatek částí, použijeme chytřejší rozdělení podle čárek
+                        if (parts.length < 6) {
+                            parts = rows[i].match(/(?:^|,)(?:[^,"]|"(?:[^"]|"")*")*(?=,|$)/g)
+                                ?.map(part => part.replace(/^,/, '').trim()) || [];
                         }
+
+                        if (parts.length >= 6) {
+                            const intCode = parts[0]?.replace(/['"]/g, '').trim();
+                            const name = parts[1]?.replace(/['"]/g, '').trim();
+                            const text = parts[2]?.replace(/['"]/g, '').trim();
+                            const price = parts[4]?.replace(/['"]/g, '').trim();
+                            const ean = parts[5]?.replace(/['"]/g, '').trim();
+                            
+                            if (ean && ean.length > 0) {
+                                database[ean] = {
+                                    intCode: intCode || '-',
+                                    name: name || 'Neznámý produkt',
+                                    text: text || '',
+                                    price: price || '-'
+                                };
+                                processedCount++;
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('Chyba při zpracování řádku:', rows[i], err);
                     }
                     
-                    processedCount++;
                     if (processedCount % 100 === 0) {
                         debugStatus.textContent = `Zpracováno ${processedCount} položek...`;
                         await new Promise(resolve => setTimeout(resolve, 0));
