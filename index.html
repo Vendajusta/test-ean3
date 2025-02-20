@@ -170,10 +170,10 @@
 
         loadDatabase();
 
-        let html5QrcodeScanner;
+        let html5QrcodeScanner = null;
         let lastCode = null;
         let lastTime = 0;
-        let lastUsedCameraId = null; // Přidáme globální proměnnou pro uložení ID kamery
+        let lastUsedCameraId = null;
 
         async function listCameras() {
             try {
@@ -195,9 +195,6 @@
             }
         }
 
-        // Přidáme proměnnou pro uložení instance kamery
-        let html5QrCode = null;
-
         async function startScannerWithCamera(cameraId) {
             if (!cameraId) return;
             
@@ -207,17 +204,16 @@
                 startButton.remove();
             }
 
-            lastUsedCameraId = cameraId;
-
             try {
-                if (html5QrCode) {
-                    await html5QrCode.stop();
+                if (html5QrcodeScanner) {
+                    await html5QrcodeScanner.stop();
                 }
-                
-                html5QrCode = new Html5Qrcode("reader");
-                document.getElementById('stop-button').style.display = 'inline';
 
-                await html5QrCode.start(
+                html5QrcodeScanner = new Html5Qrcode("reader");
+                document.getElementById('stop-button').style.display = 'inline';
+                lastUsedCameraId = cameraId;
+
+                await html5QrcodeScanner.start(
                     cameraId,
                     {
                         fps: 10,
@@ -249,11 +245,9 @@
                         }
                     }
                 );
-                
-                html5QrcodeScanner = html5QrCode;
             } catch (err) {
                 console.error('Detailní chyba:', err);
-                alert('Chyba při spouštění kamery: ' + err.message);
+                alert('Chyba při spouštění kamery. Zkuste obnovit stránku nebo povolit přístup ke kameře v nastavení prohlížeče.');
             }
         }
 
@@ -261,10 +255,10 @@
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => {
                     document.getElementById('stop-button').style.display = 'none';
+                    
                     const startButton = document.createElement('button');
                     startButton.id = 'start-button';
                     startButton.textContent = 'Začít skenovat';
-                    startButton.style.marginBottom = '10px';
                     startButton.onclick = () => {
                         if (lastUsedCameraId) {
                             startScannerWithCamera(lastUsedCameraId);
@@ -276,6 +270,8 @@
                     
                     const stopButton = document.getElementById('stop-button');
                     stopButton.parentNode.insertBefore(startButton, stopButton);
+                }).catch(error => {
+                    console.error('Chyba při zastavování skeneru:', error);
                 });
             }
         }
