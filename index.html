@@ -198,31 +198,20 @@
         async function startScannerWithCamera(cameraId) {
             if (!cameraId) return;
             
-            // Odstraníme tlačítko "Začít skenovat" pokud existuje
-            const startButton = document.querySelector('#start-button');
-            if (startButton) {
-                startButton.remove();
+            if (html5QrcodeScanner) {
+                await html5QrcodeScanner.stop();
             }
 
+            const html5QrCode = new Html5Qrcode("reader");
+            document.getElementById('stop-button').style.display = 'inline';
+
             try {
-                if (html5QrcodeScanner) {
-                    await html5QrcodeScanner.stop();
-                }
-
-                html5QrcodeScanner = new Html5Qrcode("reader");
-                document.getElementById('stop-button').style.display = 'inline';
-                lastUsedCameraId = cameraId;
-
-                await html5QrcodeScanner.start(
+                await html5QrCode.start(
                     cameraId,
                     {
                         fps: 10,
                         qrbox: { width: 250, height: 100 },
-                        aspectRatio: 1.0,
-                        formatsToSupport: [
-                            Html5QrcodeSupportedFormats.EAN_13,
-                            Html5QrcodeSupportedFormats.EAN_8
-                        ]
+                        aspectRatio: 1.0
                     },
                     (decodedText) => {
                         const now = Date.now();
@@ -245,9 +234,11 @@
                         }
                     }
                 );
+                
+                html5QrcodeScanner = html5QrCode;
             } catch (err) {
-                console.error('Detailní chyba:', err);
-                alert('Chyba při spouštění kamery. Zkuste obnovit stránku nebo povolit přístup ke kameře v nastavení prohlížeče.');
+                console.error('Chyba:', err);
+                alert('Chyba při spouštění kamery. Zkuste obnovit stránku.');
             }
         }
 
@@ -255,23 +246,7 @@
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => {
                     document.getElementById('stop-button').style.display = 'none';
-                    
-                    const startButton = document.createElement('button');
-                    startButton.id = 'start-button';
-                    startButton.textContent = 'Začít skenovat';
-                    startButton.onclick = () => {
-                        if (lastUsedCameraId) {
-                            startScannerWithCamera(lastUsedCameraId);
-                        } else {
-                            alert('Prosím vyberte nejdřív kameru');
-                            listCameras();
-                        }
-                    };
-                    
-                    const stopButton = document.getElementById('stop-button');
-                    stopButton.parentNode.insertBefore(startButton, stopButton);
-                }).catch(error => {
-                    console.error('Chyba při zastavování skeneru:', error);
+                    document.getElementById('cameras').style.display = 'block';
                 });
             }
         }
