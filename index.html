@@ -77,6 +77,15 @@
             align-items: center;
             gap: 5px;
         }
+        .header-row td[contenteditable="true"] {
+            min-height: 1.2em;
+            cursor: text;
+        }
+        .header-row td[contenteditable="true"]:empty:before {
+            content: "Klikněte pro úpravu";
+            color: #999;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -256,9 +265,26 @@
             return qty ? qty + ' ks' : '-';
         }
 
+        function initializeEmptyRows() {
+            const table = document.getElementById("product-table");
+            for (let i = 0; i < 3; i++) {
+                const row = `
+                    <tr class="header-row">
+                        <td>${i + 1}</td>
+                        <td contenteditable="true"></td>
+                        <td contenteditable="true"></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>`;
+                table.innerHTML += row;
+            }
+        }
+
         function addProduct(code, name, quantity) {
             const product = database[code];
-            const rowCount = document.getElementById("product-table").getElementsByTagName("tr").length + 1;
+            const table = document.getElementById("product-table");
+            const rowCount = table.getElementsByTagName("tr").length + 1;
             
             if (product) {
                 let row = `
@@ -285,7 +311,7 @@
                             </div>
                         </td>
                     </tr>`;
-                document.getElementById("product-table").innerHTML += row;
+                table.innerHTML += row;
             } else {
                 let row = `
                     <tr>
@@ -318,11 +344,14 @@
         function deleteRow(button) {
             if (confirm('Opravdu chcete smazat tento řádek?')) {
                 const row = button.closest('tr');
-                row.remove();
-                // Přečíslování zbývajících řádků
-                const rows = document.getElementById("product-table").getElementsByTagName("tr");
-                for(let i = 0; i < rows.length; i++) {
-                    rows[i].cells[0].textContent = i + 1;
+                if (!row.classList.contains('header-row')) {
+                    row.remove();
+                    // Přečíslování pouze položek (ne hlavičkových řádků)
+                    const rows = document.getElementById("product-table").getElementsByTagName("tr");
+                    let itemNumber = 4; // Začínáme od 4, protože první 3 jsou hlavička
+                    for (let i = 3; i < rows.length; i++) {
+                        rows[i].cells[0].textContent = itemNumber++;
+                    }
                 }
             }
         }
@@ -383,6 +412,8 @@
             const fileName = `vypis_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
+
+        document.addEventListener('DOMContentLoaded', initializeEmptyRows);
     </script>
 </body>
 </html>
