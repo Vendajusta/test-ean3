@@ -95,7 +95,6 @@
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
-        <button id="start-button" onclick="resumeScanning()" style="display: none;">Začít skenovat</button>
         <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     </div>
     <div id="reader"></div>
@@ -174,8 +173,7 @@
         let html5QrcodeScanner = null;
         let lastCode = null;
         let lastTime = 0;
-        let lastUsedCameraId = null;
-        let scanning = false; // přidáme proměnnou pro sledování stavu skenování
+        let scanning = true; // Výchozí stav je aktivní skenování
 
         async function listCameras() {
             try {
@@ -196,17 +194,6 @@
                 console.log('Dostupné kamery:', cameras);
             } catch (err) {
                 alert('Chyba při hledání kamer: ' + err);
-            }
-        }
-
-        function resumeScanning() {
-            const select = document.getElementById('cameras');
-            const selectedCamera = select.value;
-            if (selectedCamera) {
-                startScannerWithCamera(selectedCamera);
-                document.getElementById('start-button').style.display = 'none';
-            } else {
-                alert('Nejprve vyberte kameru');
             }
         }
 
