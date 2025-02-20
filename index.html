@@ -172,8 +172,11 @@
         let database = {};
         let customers = {};
         
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFKCUkz_etTLnONxyS8YN9UzBS5wq3xlC7cXZ-St4Ji-dBwF-k7KTA6J-OkdOJQ-9ibCnVFtWzVBh3/pub?gid=0&single=true&output=csv';
-        const CUSTOMERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vROID6U4GS5T8dKII9z9owRI2PSVoNv34In-8Y8FAcLsjWb1rfXBUmlSVGTp8TF8dWPQEUCntQqm7o/pub?gid=0&single=true&output=csv';
+        // První odkaz - převedený na CSV export
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTHu5mocZJrUKy4g6yBZ2YgIntpHi89N-axJlw-Foc4EbnQvQp_Y57pBpeN6Gy52oQYFIt7jh9GS4Cx/pub?gid=0&single=true&output=csv';
+        
+        // Druhý odkaz - převedený na CSV export
+        const CUSTOMERS_URL = 'https://docs.google.com/spreadsheets/d/1M-yCFeaUFKCoWasEj2o0KoQVNHqqDezpYm5RAy_qeGU/export?format=csv';
 
         async function loadDatabase() {
             try {
