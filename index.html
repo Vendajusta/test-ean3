@@ -372,9 +372,8 @@
                 ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']
             ];
 
-
-            
-            // Přidáme data z tabulky
+            // Odstraníme duplicitní hlavičku a rovnou přidáváme data
+            const tableData = [];
             document.querySelectorAll("#product-table tr").forEach((row, index) => {
                 const rowData = [];
                 row.querySelectorAll("td").forEach((cell, cellIndex) => {
