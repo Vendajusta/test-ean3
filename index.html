@@ -180,6 +180,22 @@
                 }
 
                 debugStatus.textContent = `Databáze načtena. Celkem položek: ${Object.keys(database).length}`;
+                
+                // Přidáme výpis položek do debug info
+                const debugDiv = document.getElementById('debug-info');
+                const itemsList = document.createElement('div');
+                itemsList.style.maxHeight = '200px';
+                itemsList.style.overflow = 'auto';
+                itemsList.style.marginTop = '10px';
+                itemsList.style.fontSize = '12px';
+                
+                const items = Object.entries(database).map(([ean, product]) => 
+                    `${product.name} (${product.text}) - ${ean}`
+                );
+                
+                itemsList.innerHTML = `<strong>Načtené položky:</strong><br>` + items.join('<br>');
+                debugDiv.appendChild(itemsList);
+                
                 console.log('Načteno položek:', Object.keys(database).length);
             } catch (error) {
                 console.error('Chyba při načítání:', error);
