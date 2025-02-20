@@ -399,15 +399,22 @@
 
             const ws = XLSX.utils.aoa_to_sheet(finalData);
             
-            // Nastavení šířky sloupců
+            // Nastavení širších sloupců pro lepší využití A4
             ws['!cols'] = [
-                {wch: 5},   // Č.
-                {wch: 15},  // Int. kód
-                {wch: 40},  // Název
-                {wch: 8},   // MJ
-                {wch: 10},  // Cena
-                {wch: 15}   // EAN
+                {wch: 6},    // Č. (mírně širší)
+                {wch: 20},   // Int. kód (širší)
+                {wch: 55},   // Název (výrazně širší)
+                {wch: 12},   // MJ (širší pro "XX ks")
+                {wch: 15},   // Cena (širší pro částky)
+                {wch: 20}    // EAN (širší pro čitelnost)
             ];
+
+            // Přidáme nastavení pro výšku papíru A4
+            ws['!pageSetup'] = {
+                paperSize: 9, // A4
+                orientation: 'portrait',
+                fitToPage: true
+            };
 
             // Upravíme sloučení buněk pro hlavičku
             ws['!merges'] = [
