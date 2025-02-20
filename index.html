@@ -378,16 +378,19 @@
 
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
-            const data = [['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']];
+            const data = [
+                ['DODACÍ LIST', '', '', '', '', ''],
+                ['Datum: ' + new Date().toLocaleDateString('cs-CZ'), '', '', '', '', ''],
+                ['Odběratel: FIRMA s.r.o.', '', '', '', '', ''],
+                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']
+            ];
             
             document.querySelectorAll("#product-table tr").forEach(row => {
                 const rowData = [];
                 row.querySelectorAll("td").forEach((cell, index) => {
                     if (index === 3) {
-                        // Množství - necháme "ks" z HTML
                         rowData.push(cell.querySelector('.quantity-value').innerText);
                     } else if (index === 4) {
-                        // Cena - necháme ",00" z HTML
                         rowData.push(cell.querySelector('.price-value').innerText);
                     } else if (index === 5) {
                         rowData.push(cell.querySelector('.actions-container span').innerText);
@@ -399,6 +402,8 @@
             });
 
             const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            // Nastavení šířky sloupců
             ws['!cols'] = [
                 {wch: 5},   // Č.
                 {wch: 15},  // Int. kód
@@ -406,6 +411,13 @@
                 {wch: 8},   // MJ
                 {wch: 10},  // Cena
                 {wch: 15}   // EAN
+            ];
+
+            // Sloučení buněk pro hlavičku
+            ws['!merges'] = [
+                {s: {r: 0, c: 0}, e: {r: 0, c: 5}},  // První řádek přes všechny sloupce
+                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Druhý řádek přes všechny sloupce
+                {s: {r: 2, c: 0}, e: {r: 2, c: 5}}   // Třetí řádek přes všechny sloupce
             ];
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
