@@ -70,6 +70,9 @@
         </table>
     </div>
     <button onclick="exportTableToCSV()">Exportovat jako tabulku</button>
+    <div id="debug-info" style="margin-top: 20px; padding: 10px; background: #f5f5f5; font-family: monospace;">
+        Stav: <span id="debug-status">Čekám na načtení databáze...</span>
+    </div>
 
     <script>
         let database = {};
@@ -77,19 +80,24 @@
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1k6eKKCXdteZRmzCDQZFVVVHxOucdV0Qy6mNNKXdcnQ_0/export?format=csv';
 
         async function loadDatabase() {
+            const debugStatus = document.getElementById('debug-status');
             try {
+                debugStatus.textContent = 'Načítám databázi produktů...';
                 const response = await fetch(SHEET_URL);
                 if (!response.ok) {
                     throw new Error('Nelze načíst data');
                 }
                 
                 const text = await response.text();
+                debugStatus.textContent = 'Zpracovávám data...';
+                
                 const rows = text
                     .split('\n')
                     .map(row => row.trim())
                     .filter(row => row.length > 0);
                 
                 database = {};
+                let processedCount = 0;
                 for (let i = 1; i < rows.length; i++) {
                     const parts = rows[i].split(/[,\t]+|\s{2,}/);
                     if (parts.length >= 3) {
@@ -105,8 +113,17 @@
                             };
                         }
                     }
+                    processedCount++;
+                    if (processedCount % 1000 === 0) {
+                        debugStatus.textContent = `Zpracováno ${processedCount} položek...`;
+                        // Dáme prohlížeči čas na aktualizaci UI
+                        await new Promise(resolve => setTimeout(resolve, 0));
+                    }
                 }
+
+                debugStatus.textContent = `Databáze načtena. Celkem položek: ${Object.keys(database).length}`;
             } catch (error) {
+                debugStatus.textContent = 'Chyba při načítání databáze: ' + error.message;
                 alert('Nepodařilo se načíst databázi produktů');
             }
         }
