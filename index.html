@@ -246,21 +246,17 @@
                         
                         const now = Date.now();
                         if (decodedText === lastCode && now - lastTime < 2000) return;
-
-                        // Okamžitá vibrace a zvuk, bez čekání
-                        navigator.vibrate(100);
-                        new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
                         
                         lastCode = decodedText;
                         lastTime = now;
                         
                         let product = database[decodedText];
-                        // Pouze pokud najdeme produkt, zavibrujeme znovu
                         if (product) {
-                            navigator.vibrate([50, 30, 50]);
+                            // Vibrujeme POUZE když najdeme produkt v databázi
+                            navigator.vibrate(200);
+                            new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
                         }
                         
-                        // Až potom zobrazíme prompt
                         let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
                         let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
                         if (quantity) addProduct(decodedText, name, quantity);
