@@ -363,11 +363,11 @@
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
             
-            // Hlavička dokumentu s dodavatelem na jednom řádku
             const headerRows = [
                 ['DODACÍ LIST č. ' + new Date().toLocaleDateString('cs-CZ'), '', '', '', '', ''],
                 ['Datum: ' + new Date().toLocaleDateString('cs-CZ'), '', '', '', '', ''],
-                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo, Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', ''],
+                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', '', '', '', '', ''],
+                ['Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', ''],
                 ['', '', '', '', '', ''], // prázdný řádek pro oddělení
                 ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']
             ];
@@ -409,12 +409,13 @@
                 {wch: 15}   // EAN
             ];
 
-            // Upravíme sloučení buněk pro kratší hlavičku
+            // Upravíme sloučení buněk pro hlavičku
             ws['!merges'] = [
-                {s: {r: 0, c: 0}, e: {r: 0, c: 5}},  // První řádek
-                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Druhý řádek
-                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Třetí řádek - dodavatel
-                {s: {r: 3, c: 0}, e: {r: 3, c: 5}}   // Prázdný řádek
+                {s: {r: 0, c: 0}, e: {r: 0, c: 5}},  // Dodací list
+                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
+                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Dodavatel název
+                {s: {r: 3, c: 0}, e: {r: 3, c: 5}},  // Dodavatel adresa
+                {s: {r: 4, c: 0}, e: {r: 4, c: 5}}   // Prázdný řádek
             ];
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
