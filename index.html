@@ -96,7 +96,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vyat kameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -245,20 +245,20 @@
                     },
                     (decodedText) => {
                         if (!scanning) return;
-            
                         const now = Date.now();
                         if (decodedText === lastCode && now - lastTime < 2000) return;
-
-                        // Nejdřív vibrujeme
-                        navigator.vibrate(200);
                         
+                        navigator.vibrate(200); // Spustí vibraci okamžitě
+
                         lastCode = decodedText;
                         lastTime = now;
-                        
-                        let product = database[decodedText];
-                        let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
-                        let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
-                        if (quantity) addProduct(decodedText, name, quantity);
+
+                        setTimeout(() => {
+                            let product = database[decodedText];
+                            let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
+                            let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
+                            if (quantity) addProduct(decodedText, name, quantity);
+                        }, 50); // Krátká prodleva pro zajištění, že vibrace proběhne dříve než prompt
                     },
                     (errorMessage) => {
                         if (!errorMessage.includes("No barcode detected")) {
