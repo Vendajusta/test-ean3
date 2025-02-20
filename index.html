@@ -241,30 +241,29 @@
                         qrbox: { width: 250, height: 100 },
                         aspectRatio: 1.0
                     },
-                    async (decodedText) => {
+                    (decodedText) => {
                         if (!scanning) return;
                         
                         const now = Date.now();
                         if (decodedText === lastCode && now - lastTime < 2000) return;
-                        
-                        // Nejdřív vibrujeme a přehrajeme zvuk
-                        await navigator.vibrate(100);
+
+                        // Okamžitá vibrace a zvuk, bez čekání
+                        navigator.vibrate(100);
                         new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
                         
                         lastCode = decodedText;
                         lastTime = now;
                         
                         let product = database[decodedText];
+                        // Pouze pokud najdeme produkt, zavibrujeme znovu
                         if (product) {
-                            // Další vibrace při nalezení produktu
-                            await navigator.vibrate([100, 50, 100]);
+                            navigator.vibrate([50, 30, 50]);
                         }
                         
-                        setTimeout(() => {
-                            let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
-                            let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
-                            if (quantity) addProduct(decodedText, name, quantity);
-                        }, 300); // Počkáme až proběhne vibrace
+                        // Až potom zobrazíme prompt
+                        let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
+                        let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
+                        if (quantity) addProduct(decodedText, name, quantity);
                     },
                     (errorMessage) => {
                         if (!errorMessage.includes("No barcode detected")) {
