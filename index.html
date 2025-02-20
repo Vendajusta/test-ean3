@@ -24,11 +24,16 @@
             min-width: 600px;
             max-width: 900px;
             margin: 10px auto;
+            border: none;  /* Odstraníme rámeček celé tabulky */
         }
         th, td { 
-            border: 1px solid #000; 
+            border: none;  /* Odstraníme všechny rámečky */
+            border-bottom: 1px solid #ddd;  /* Přidáme pouze spodní čáru */
             padding: 8px; 
             text-align: left;
+        }
+        th {
+            border-bottom: 2px solid #000;  /* Silnější čára pod hlavičkou */
         }
         .delete-btn {
             background-color: #ff4444;
