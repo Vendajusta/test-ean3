@@ -96,7 +96,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vyt kameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -234,6 +234,8 @@
                 document.getElementById('stop-button').textContent = 'Pozastavit skenování';
                 scanning = true;
 
+                let lastVibrateTime = 0;
+    
                 await html5QrcodeScanner.start(
                     cameraId,
                     {
@@ -242,11 +244,14 @@
                         aspectRatio: 1.0
                     },
                     (decodedText) => {
-                        // Okamžitě při detekci čárového kódu zavibrujeme
-                        navigator.vibrate(500);
-                        
-                        if (!scanning) return;
                         const now = Date.now();
+                        // Vibrujeme jen když je to nový kód (jiný než poslední) nebo uplynuly 2 sekundy
+                        if (decodedText !== lastCode || now - lastVibrateTime > 2000) {
+                            navigator.vibrate(200);
+                            lastVibrateTime = now;
+                        }
+
+                        if (!scanning) return;
                         if (decodedText === lastCode && now - lastTime < 2000) return;
                         
                         lastCode = decodedText;
@@ -254,13 +259,11 @@
                         
                         let product = database[decodedText];
                         if (product) {
-                            // Pokud najdeme produkt, přehrajeme zvuk
                             new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
+                            let name = `${product.name} - ${product.text}`;
+                            let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
+                            if (quantity) addProduct(decodedText, name, quantity);
                         }
-                        
-                        let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
-                        let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
-                        if (quantity) addProduct(decodedText, name, quantity);
                     },
                     (errorMessage) => {
                         if (!errorMessage.includes("No barcode detected")) {
