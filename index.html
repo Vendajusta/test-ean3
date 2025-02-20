@@ -58,6 +58,20 @@
             border-radius: 3px;
             font-size: 12px;
         }
+        .edit-qty-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .actions-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -243,7 +257,7 @@
                         <td>
                             <div class="quantity-container">
                                 <span class="quantity-value">${quantity}</span>
-                                <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                                <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
                             </div>
                         </td>
                         <td>
@@ -252,7 +266,12 @@
                                 <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
                             </div>
                         </td>
-                        <td>${code}</td>
+                        <td>
+                            <div class="actions-container">
+                                <span>${code}</span>
+                                <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                            </div>
+                        </td>
                     </tr>`;
                 document.getElementById("product-table").innerHTML += row;
             } else {
@@ -264,7 +283,7 @@
                         <td>
                             <div class="quantity-container">
                                 <span class="quantity-value">${quantity}</span>
-                                <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                                <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
                             </div>
                         </td>
                         <td>
@@ -273,7 +292,12 @@
                                 <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
                             </div>
                         </td>
-                        <td>${code}</td>
+                        <td>
+                            <div class="actions-container">
+                                <span>${code}</span>
+                                <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                            </div>
+                        </td>
                     </tr>`;
                 document.getElementById("product-table").innerHTML += row;
             }
@@ -301,6 +325,16 @@
             }
         }
 
+        function editQuantity(button) {
+            const qtySpan = button.previousElementSibling;
+            const currentQty = qtySpan.textContent;
+            const newQty = prompt('Zadejte nové množství:', currentQty);
+            
+            if (newQty !== null && newQty.trim() !== '') {
+                qtySpan.textContent = newQty;
+            }
+        }
+
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
             const data = [['Č.', 'Int. kód', 'Název', 'MJ', 'Cena', 'EAN']];
@@ -312,6 +346,8 @@
                         rowData.push(cell.querySelector('.quantity-value').innerText);
                     } else if (index === 4) {
                         rowData.push(cell.querySelector('.price-value').innerText);
+                    } else if (index === 5) {
+                        rowData.push(cell.querySelector('.actions-container span').innerText);
                     } else {
                         rowData.push(cell.innerText);
                     }
@@ -329,9 +365,8 @@
                 {wch: 15}   // EAN
             ];
 
-            const today = new Date();
-            const dateStr = today.toLocaleDateString('cs-CZ').replace(/\s/g, '');
-            const fileName = `vypis_${dateStr}.xlsx`;
+            XLSX.utils.book_append_sheet(wb, ws, "Sklad");
+            const fileName = `vypis_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
     </script>
