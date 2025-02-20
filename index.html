@@ -173,7 +173,7 @@
         let customers = {};
         
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTFKCUkz_etTLnONxyS8YN9UzBS5wq3xlC7cXZ-St4Ji-dBwF-k7KTA6J-OkdOJQ-9ibCnVFtWzVBh3/pub?gid=0&single=true&output=csv';
-        const CUSTOMERS_URL = 'https://docs.google.com/spreadsheets/d/e/1M-yCFeaUFKCoWasEj2o0KoQVNHqqDezpYm5RAy_qeGU/pub?gid=0&single=true&output=csv';
+        const CUSTOMERS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vROID6U4GS5T8dKII9z9owRI2PSVoNv34In-8Y8FAcLsjWb1rfXBUmlSVGTp8TF8dWPQEUCntQqm7o/pub?gid=0&single=true&output=csv';
 
         async function loadDatabase() {
             try {
@@ -212,19 +212,31 @@
 
         async function loadCustomers() {
             try {
+                console.log('Začínám načítat zákazníky z:', CUSTOMERS_URL);
                 const response = await fetch(CUSTOMERS_URL);
-                if (!response.ok) throw new Error('Nelze načíst seznam zákazníků');
+                
+                if (!response.ok) {
+                    console.error('Chyba response:', response.status, response.statusText);
+                    throw new Error('Nelze načíst seznam zákazníků');
+                }
                 
                 const text = await response.text();
+                console.log('Načtená data zákazníků:', text.substring(0, 200) + '...');
+                
                 const rows = text
                     .split('\n')
                     .map(row => row.trim())
                     .filter(row => row.length > 0);
                 
+                console.log('Počet řádků:', rows.length);
+                console.log('První řádek (hlavička):', rows[0]);
+                
                 customers = {};
                 // Přeskočíme hlavičku
                 for (let i = 1; i < rows.length; i++) {
-                    const parts = rows[i].split(/[,\t]+|\s{2,}/); // Rozdělí podle čárek, tabulátorů nebo více mezer
+                    const parts = rows[i].split(/[,\t]+|\s{2,}/);
+                    console.log(`Řádek ${i}:`, parts);
+                    
                     if (parts.length >= 2) {
                         const name = parts[0]?.replace(/['"]/g, '').trim();
                         const ico = parts[1]?.replace(/['"]/g, '').trim();
@@ -235,26 +247,33 @@
                                 ico: ico || '',
                                 otherInfo: otherInfo || []
                             };
+                            console.log('Přidán zákazník:', name, customers[name]);
                         }
                     }
                 }
 
-                // Přidáme zobrazení zákazníků do debug tabulky
+                console.log('Celkem načteno zákazníků:', Object.keys(customers).length);
+
+                // Aktualizace debug tabulky
                 const debugTable = document.getElementById('debug-customers');
                 debugTable.innerHTML = '';
-                Object.entries(customers).forEach(([name, data]) => {
-                    const row = `<tr>
-                        <td>${name}</td>
-                        <td>${data.ico}</td>
-                        <td>${data.otherInfo.join(', ')}</td>
-                    </tr>`;
-                    debugTable.innerHTML += row;
-                });
+                if (Object.keys(customers).length === 0) {
+                    debugTable.innerHTML = '<tr><td colspan="3">Žádní zákazníci nenalezeni</td></tr>';
+                } else {
+                    Object.entries(customers).forEach(([name, data]) => {
+                        const row = `<tr>
+                            <td>${name}</td>
+                            <td>${data.ico}</td>
+                            <td>${data.otherInfo.join(', ')}</td>
+                        </tr>`;
+                        debugTable.innerHTML += row;
+                    });
+                }
 
                 setupCustomerSearch();
             } catch (error) {
-                console.error('Chyba načítání zákazníků:', error);
-                alert('Nepodařilo se načíst seznam zákazníků');
+                console.error('Detailní chyba:', error);
+                alert('Nepodařilo se načíst seznam zákazníků: ' + error.message);
             }
         }
 
