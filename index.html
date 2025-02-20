@@ -179,7 +179,6 @@
             try {
                 const cameras = await Html5Qrcode.getCameras();
                 const select = document.getElementById('cameras');
-                const startButton = document.getElementById('start-button');
                 
                 select.innerHTML = '<option value="">Vyberte kameru...</option>';
                 cameras.forEach(camera => {
@@ -190,7 +189,6 @@
                 });
                 
                 select.style.display = 'block';
-                startButton.style.display = 'inline';
                 console.log('Dostupné kamery:', cameras);
             } catch (err) {
                 alert('Chyba při hledání kamer: ' + err);
