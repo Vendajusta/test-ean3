@@ -243,6 +243,14 @@
             return code.replace(/[^0-9]/g, '');
         }
 
+        function formatPrice(price) {
+            return price ? price.replace(/[^\d.,]/g, '') + ',00' : '-';
+        }
+
+        function formatQuantity(qty) {
+            return qty ? qty + ' ks' : '-';
+        }
+
         function addProduct(code, name, quantity) {
             const product = database[code];
             const rowCount = document.getElementById("product-table").getElementsByTagName("tr").length + 1;
@@ -255,13 +263,13 @@
                         <td>${product.name}</td>
                         <td>
                             <div class="quantity-container">
-                                <span class="quantity-value">${quantity}</span>
+                                <span class="quantity-value">${quantity} ks</span>
                                 <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
                             </div>
                         </td>
                         <td>
                             <div class="price-container">
-                                <span class="price-value">${product.price}</span>
+                                <span class="price-value">${formatPrice(product.price)}</span>
                                 <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
                             </div>
                         </td>
@@ -281,7 +289,7 @@
                         <td>Neznámý produkt</td>
                         <td>
                             <div class="quantity-container">
-                                <span class="quantity-value">${quantity}</span>
+                                <span class="quantity-value">${quantity} ks</span>
                                 <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
                             </div>
                         </td>
@@ -316,34 +324,36 @@
 
         function editPrice(button) {
             const priceSpan = button.previousElementSibling;
-            const currentPrice = priceSpan.textContent;
+            const currentPrice = priceSpan.textContent.replace(',00', '');
             const newPrice = prompt('Zadejte novou cenu:', currentPrice);
             
             if (newPrice !== null && newPrice.trim() !== '') {
-                priceSpan.textContent = newPrice;
+                priceSpan.textContent = formatPrice(newPrice);
             }
         }
 
         function editQuantity(button) {
             const qtySpan = button.previousElementSibling;
-            const currentQty = qtySpan.textContent;
+            const currentQty = qtySpan.textContent.replace(' ks', '');
             const newQty = prompt('Zadejte nové množství:', currentQty);
             
             if (newQty !== null && newQty.trim() !== '') {
-                qtySpan.textContent = newQty;
+                qtySpan.textContent = newQty + ' ks';
             }
         }
 
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
-            const data = [['Č.', 'Int. kód', 'Název', 'MJ', 'Cena', 'EAN']];
+            const data = [['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']];
             
             document.querySelectorAll("#product-table tr").forEach(row => {
                 const rowData = [];
                 row.querySelectorAll("td").forEach((cell, index) => {
                     if (index === 3) {
+                        // Množství - necháme "ks" z HTML
                         rowData.push(cell.querySelector('.quantity-value').innerText);
                     } else if (index === 4) {
+                        // Cena - necháme ",00" z HTML
                         rowData.push(cell.querySelector('.price-value').innerText);
                     } else if (index === 5) {
                         rowData.push(cell.querySelector('.actions-container span').innerText);
