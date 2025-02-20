@@ -242,18 +242,25 @@
                         aspectRatio: 1.0
                     },
                     (decodedText) => {
-                        if (!scanning) return; // přidáme kontrolu stavu skenování
+                        if (!scanning) return;
                         
                         const now = Date.now();
                         if (decodedText === lastCode && now - lastTime < 2000) return;
                         
+                        // Nejdřív vibrujeme a přehrajeme zvuk
                         navigator.vibrate(100);
                         new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
                         
+                        // Až pak nastavíme last code a time
                         lastCode = decodedText;
                         lastTime = now;
                         
                         let product = database[decodedText];
+                        if (product) {
+                            // Další vibrace při nalezení produktu v databázi
+                            navigator.vibrate([100, 50, 100]);
+                        }
+                        
                         let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
                         let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
                         if (quantity) addProduct(decodedText, name, quantity);
