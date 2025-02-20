@@ -106,7 +106,7 @@
 
     <script>
         let database = {};
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1nLtQavnR8Zy4UyFiQqisnulks1epEmSXPgkgetOcS-M/export?format=csv';
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1k6eKKCXdteZRmzCDQZFVVHxOucdV0Qy6mNNKXdcnQ_0/export?format=csv';
 
         async function loadDatabase() {
             const debugStatus = document.getElementById('debug-status');
@@ -123,14 +123,14 @@
                 database = {};
                 let processedCount = 0;
                 
-                // Předpokládáme formát: interní kód, název, text, MJ, cena, EAN
+                // Předpokládáme formát: int_kod, nazev, text, mj, cena, ean
                 for (let i = 1; i < rows.length; i++) {
                     const parts = rows[i].split(/[,\t]+|\s{2,}/);
                     if (parts.length >= 6) {
                         const intCode = parts[0]?.replace(/['"]/g, '').trim();
-                        const name = parts[1]?.replace(/['"]/g, '').trim();
-                        const ean = parts[5]?.replace(/['"]/g, '').trim();
+                        const name = parts[1]?.replace(/['"]/g, '').trim(); // použijeme název místo textu
                         const price = parts[4]?.replace(/['"]/g, '').trim();
+                        const ean = parts[5]?.replace(/['"]/g, '').trim();
                         
                         if (ean) {
                             database[ean] = {
@@ -143,7 +143,6 @@
                     processedCount++;
                     if (processedCount % 1000 === 0) {
                         debugStatus.textContent = `Zpracováno ${processedCount} položek...`;
-                        // Dáme prohlížeči čas na aktualizaci UI
                         await new Promise(resolve => setTimeout(resolve, 0));
                     }
                 }
