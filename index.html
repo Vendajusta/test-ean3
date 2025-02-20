@@ -173,6 +173,7 @@
         let html5QrcodeScanner;
         let lastCode = null;
         let lastTime = 0;
+        let lastUsedCameraId = null; // Přidáme globální proměnnou pro uložení ID kamery
 
         async function listCameras() {
             try {
@@ -198,10 +199,12 @@
             if (!cameraId) return;
             
             // Odstraníme tlačítko "Začít skenovat" pokud existuje
-            const startButton = document.querySelector('button:not(#stop-button)');
-            if (startButton && startButton.textContent === 'Začít skenovat') {
+            const startButton = document.querySelector('#start-button');
+            if (startButton) {
                 startButton.remove();
             }
+
+            lastUsedCameraId = cameraId; // Uložíme ID kamery
 
             if (html5QrcodeScanner) {
                 await html5QrcodeScanner.stop();
@@ -255,12 +258,16 @@
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => {
                     document.getElementById('stop-button').style.display = 'none';
-                    // Přidáme tlačítko pro opětovné spuštění skenování
-                    const lastCamera = html5QrcodeScanner.getSelectedCameraId();
+                    
+                    // Vytvoříme nové tlačítko pro start
                     const startButton = document.createElement('button');
+                    startButton.id = 'start-button';
                     startButton.textContent = 'Začít skenovat';
-                    startButton.onclick = () => startScannerWithCamera(lastCamera);
-                    document.getElementById('stop-button').parentNode.insertBefore(startButton, document.getElementById('stop-button'));
+                    startButton.onclick = () => startScannerWithCamera(lastUsedCameraId);
+                    
+                    // Vložíme ho před stop tlačítko
+                    const stopButton = document.getElementById('stop-button');
+                    stopButton.parentNode.insertBefore(startButton, stopButton);
                 });
             }
         }
