@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skladový skener</title>
+    <title>Skdový skener</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
@@ -265,22 +265,6 @@
             return qty ? qty + ' ks' : '-';
         }
 
-        function initializeEmptyRows() {
-            const table = document.getElementById("product-table");
-            for (let i = 0; i < 3; i++) {
-                const row = `
-                    <tr class="header-row">
-                        <td>${i + 1}</td>
-                        <td contenteditable="true"></td>
-                        <td contenteditable="true"></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>`;
-                table.innerHTML += row;
-            }
-        }
-
         function addProduct(code, name, quantity) {
             const product = database[code];
             const table = document.getElementById("product-table");
@@ -378,30 +362,40 @@
 
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
-            const data = [
-                ['DODACÍ LIST', '', '', '', '', ''],
+            
+            // Nejdřív vytvoříme pole s hlavičkou dokumentu
+            const headerRows = [
+                ['DODACÍ LIST č. ' + new Date().toLocaleDateString('cs-CZ'), '', '', '', '', ''],
                 ['Datum: ' + new Date().toLocaleDateString('cs-CZ'), '', '', '', '', ''],
                 ['Odběratel: FIRMA s.r.o.', '', '', '', '', ''],
+            ];
+
+            // Pak přidáme hlavičku tabulky a data
+            const tableData = [
                 ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']
             ];
             
-            document.querySelectorAll("#product-table tr").forEach(row => {
+            // Přidáme data z tabulky
+            document.querySelectorAll("#product-table tr").forEach((row, index) => {
                 const rowData = [];
-                row.querySelectorAll("td").forEach((cell, index) => {
-                    if (index === 3) {
+                row.querySelectorAll("td").forEach((cell, cellIndex) => {
+                    if (cellIndex === 3) {
                         rowData.push(cell.querySelector('.quantity-value').innerText);
-                    } else if (index === 4) {
+                    } else if (cellIndex === 4) {
                         rowData.push(cell.querySelector('.price-value').innerText);
-                    } else if (index === 5) {
+                    } else if (cellIndex === 5) {
                         rowData.push(cell.querySelector('.actions-container span').innerText);
                     } else {
                         rowData.push(cell.innerText);
                     }
                 });
-                data.push(rowData);
+                tableData.push(rowData);
             });
 
-            const ws = XLSX.utils.aoa_to_sheet(data);
+            // Spojíme hlavičku dokumentu a data tabulky
+            const finalData = [...headerRows, ...tableData];
+
+            const ws = XLSX.utils.aoa_to_sheet(finalData);
             
             // Nastavení šířky sloupců
             ws['!cols'] = [
@@ -421,11 +415,9 @@
             ];
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
-            const fileName = `vypis_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
+            const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
-
-        document.addEventListener('DOMContentLoaded', initializeEmptyRows);
     </script>
 </body>
 </html>
