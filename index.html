@@ -137,39 +137,52 @@
                 const text = await response.text();
                 debugStatus.textContent = 'Zpracovávám data...';
                 
-                const rows = text.split('\n').map(row => row.trim()).filter(row => row.length > 0);
+                // Vylepšené parsování CSV
+                const rows = text.split('\n')
+                    .map(row => row.trim())
+                    .filter(row => row.length > 0);
                 
                 database = {};
                 let processedCount = 0;
                 
-                // Předpokládáme formát: int_kod, nazev, text, mj, cena, ean
+                // Vylepšené rozdělení řádků
                 for (let i = 1; i < rows.length; i++) {
-                    const parts = rows[i].split(/[,\t]+|\s{2,}/);
+                    // Nejdřív rozdělíme podle tabulátorů
+                    let parts = rows[i].split('\t');
+                    
+                    // Pokud nemáme dostatek částí, zkusíme rozdělit podle čárek
+                    if (parts.length < 6) {
+                        parts = rows[i].split(',');
+                    }
+
                     if (parts.length >= 6) {
                         const intCode = parts[0]?.replace(/['"]/g, '').trim();
-                        const name = parts[1]?.replace(/['"]/g, '').trim(); // použijeme název místo textu
-                        const text = parts[2]?.replace(/['"]/g, '').trim(); // Přidáme text
+                        const name = parts[1]?.replace(/['"]/g, '').trim();
+                        const text = parts[2]?.replace(/['"]/g, '').trim();
                         const price = parts[4]?.replace(/['"]/g, '').trim();
                         const ean = parts[5]?.replace(/['"]/g, '').trim();
                         
-                        if (ean) {
+                        if (ean && ean.length > 0) {
                             database[ean] = {
-                                intCode: intCode,
-                                name: name,
-                                text: text, // Přidáme text do objektu
-                                price: price
+                                intCode: intCode || '-',
+                                name: name || 'Neznámý produkt',
+                                text: text || '',
+                                price: price || '-'
                             };
                         }
                     }
+                    
                     processedCount++;
-                    if (processedCount % 1000 === 0) {
+                    if (processedCount % 100 === 0) {
                         debugStatus.textContent = `Zpracováno ${processedCount} položek...`;
                         await new Promise(resolve => setTimeout(resolve, 0));
                     }
                 }
 
                 debugStatus.textContent = `Databáze načtena. Celkem položek: ${Object.keys(database).length}`;
+                console.log('Načteno položek:', Object.keys(database).length);
             } catch (error) {
+                console.error('Chyba při načítání:', error);
                 debugStatus.textContent = 'Chyba při načítání databáze: ' + error.message;
                 alert('Nepodařilo se načíst databázi produktů');
             }
