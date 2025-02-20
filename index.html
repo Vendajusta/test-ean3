@@ -96,7 +96,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybt kameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -247,15 +247,17 @@
                         const now = Date.now();
                         if (decodedText === lastCode && now - lastTime < 2000) return;
                         
-                        lastCode = decodedText;
-                        lastTime = now;
-                        
                         let product = database[decodedText];
+                        
+                        // Nejdřív zkontrolujeme produkt a případně zavibrujeme
                         if (product) {
-                            // Vibrujeme POUZE když najdeme produkt v databázi
                             navigator.vibrate(500);
                             new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA").play();
                         }
+                        
+                        // Až potom aktualizujeme last code a time
+                        lastCode = decodedText;
+                        lastTime = now;
                         
                         let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
                         let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
