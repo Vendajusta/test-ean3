@@ -44,12 +44,26 @@
             align-items: center;
             gap: 5px;
         }
+        .price-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .edit-price-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 2px 6px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybt kameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -60,10 +74,12 @@
         <table>
             <thead>
                 <tr>
-                    <th>Kód</th>
+                    <th>Č.</th>
+                    <th>Int. kód</th>
                     <th>Název</th>
+                    <th>MJ</th>
                     <th>Cena</th>
-                    <th>Počet</th>
+                    <th>EAN</th>
                 </tr>
             </thead>
             <tbody id="product-table"></tbody>
@@ -76,7 +92,6 @@
 
     <script>
         let database = {};
-        // Upravený odkaz pro správný formát CSV exportu
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1nLtQavnR8Zy4UyFiQqisnulks1epEmSXPgkgetOcS-M/export?format=csv';
 
         async function loadDatabase() {
@@ -84,30 +99,28 @@
             try {
                 debugStatus.textContent = 'Načítám databázi produktů...';
                 const response = await fetch(SHEET_URL);
-                if (!response.ok) {
-                    throw new Error('Nelze načíst data');
-                }
+                if (!response.ok) throw new Error('Nelze načíst data');
                 
                 const text = await response.text();
                 debugStatus.textContent = 'Zpracovávám data...';
                 
-                const rows = text
-                    .split('\n')
-                    .map(row => row.trim())
-                    .filter(row => row.length > 0);
+                const rows = text.split('\n').map(row => row.trim()).filter(row => row.length > 0);
                 
                 database = {};
                 let processedCount = 0;
+                
+                // Předpokládáme formát: interní kód, název, text, MJ, cena, EAN
                 for (let i = 1; i < rows.length; i++) {
                     const parts = rows[i].split(/[,\t]+|\s{2,}/);
-                    if (parts.length >= 3) {
-                        const code = parts[0]?.replace(/['"]/g, '').trim();
+                    if (parts.length >= 6) {
+                        const intCode = parts[0]?.replace(/['"]/g, '').trim();
                         const name = parts[1]?.replace(/['"]/g, '').trim();
-                        const price = parts[2]?.replace(/['"]/g, '').trim();
+                        const ean = parts[5]?.replace(/['"]/g, '').trim();
+                        const price = parts[4]?.replace(/['"]/g, '').trim();
                         
-                        if (code && name) {
-                            const normalizedCode = code.replace(/[^0-9]/g, '');
-                            database[normalizedCode] = {
+                        if (ean) {
+                            database[ean] = {
+                                intCode: intCode,
                                 name: name,
                                 price: price
                             };
@@ -218,37 +231,49 @@
         }
 
         function addProduct(code, name, quantity) {
-            const normalizedCode = normalizeEAN(code);
-            const product = database[normalizedCode];
+            const product = database[code];
+            const rowCount = document.getElementById("product-table").getElementsByTagName("tr").length + 1;
             
             if (product) {
-                name = product.name;
-                const price = product.price;
                 let row = `
                     <tr>
-                        <td>${normalizedCode}</td>
-                        <td>${name}</td>
-                        <td>${price}</td>
+                        <td>${rowCount}</td>
+                        <td>${product.intCode}</td>
+                        <td>${product.name}</td>
                         <td>
                             <div class="quantity-container">
                                 <span class="quantity-value">${quantity}</span>
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
+                        <td>
+                            <div class="price-container">
+                                <span class="price-value">${product.price}</span>
+                                <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
+                            </div>
+                        </td>
+                        <td>${code}</td>
                     </tr>`;
                 document.getElementById("product-table").innerHTML += row;
             } else {
                 let row = `
                     <tr>
-                        <td>${normalizedCode}</td>
-                        <td>Neznámý produkt</td>
+                        <td>${rowCount}</td>
                         <td>-</td>
+                        <td>Neznámý produkt</td>
                         <td>
                             <div class="quantity-container">
                                 <span class="quantity-value">${quantity}</span>
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
+                        <td>
+                            <div class="price-container">
+                                <span class="price-value">-</span>
+                                <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
+                            </div>
+                        </td>
+                        <td>${code}</td>
                     </tr>`;
                 document.getElementById("product-table").innerHTML += row;
             }
@@ -258,21 +283,35 @@
             if (confirm('Opravdu chcete smazat tento řádek?')) {
                 const row = button.closest('tr');
                 row.remove();
+                // Přečíslování zbývajících řádků
+                const rows = document.getElementById("product-table").getElementsByTagName("tr");
+                for(let i = 0; i < rows.length; i++) {
+                    rows[i].cells[0].textContent = i + 1;
+                }
+            }
+        }
+
+        function editPrice(button) {
+            const priceSpan = button.previousElementSibling;
+            const currentPrice = priceSpan.textContent;
+            const newPrice = prompt('Zadejte novou cenu:', currentPrice);
+            
+            if (newPrice !== null && newPrice.trim() !== '') {
+                priceSpan.textContent = newPrice;
             }
         }
 
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
+            const data = [['Č.', 'Int. kód', 'Název', 'MJ', 'Cena', 'EAN']];
             
-            const today = new Date();
-            const dateStr = today.toLocaleDateString('cs-CZ').replace(/\s/g, '');
-            
-            const data = [['Kód', 'Název', 'Cena', 'Počet']];
             document.querySelectorAll("#product-table tr").forEach(row => {
                 const rowData = [];
                 row.querySelectorAll("td").forEach((cell, index) => {
                     if (index === 3) {
                         rowData.push(cell.querySelector('.quantity-value').innerText);
+                    } else if (index === 4) {
+                        rowData.push(cell.querySelector('.price-value').innerText);
                     } else {
                         rowData.push(cell.innerText);
                     }
@@ -281,15 +320,17 @@
             });
 
             const ws = XLSX.utils.aoa_to_sheet(data);
-
             ws['!cols'] = [
-                {wch: 20},
-                {wch: 40},
-                {wch: 10},
-                {wch: 8}
+                {wch: 5},   // Č.
+                {wch: 15},  // Int. kód
+                {wch: 40},  // Název
+                {wch: 8},   // MJ
+                {wch: 10},  // Cena
+                {wch: 15}   // EAN
             ];
 
-            XLSX.utils.book_append_sheet(wb, ws, "Sklad");
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('cs-CZ').replace(/\s/g, '');
             const fileName = `vypis_${dateStr}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
