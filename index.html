@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skladov skener</title>
+    <title>Skladový skener</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
@@ -49,7 +49,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vybt kameru</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -77,7 +77,7 @@
     <script>
         let database = {};
         // Upravený odkaz pro správný formát CSV exportu
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1k6eKKCXdteZRmzCDQZFVVVHxOucdV0Qy6mNNKXdcnQ_0/export?format=csv';
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1nLtQavnR8Zy4UyFiQqisnulks1epEmSXPgkgetOcS-M/export?format=csv';
 
         async function loadDatabase() {
             const debugStatus = document.getElementById('debug-status');
