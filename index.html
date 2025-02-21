@@ -11,6 +11,19 @@
             max-width: 1000px;
             margin: 0 auto;
             padding: 15px;
+            font-size: 18px; /* Základní velikost písma */
+        }
+        h2 {
+            font-size: 32px; /* Větší nadpis */
+            margin-bottom: 20px;
+        }
+        button {
+            font-size: 18px; /* Větší text tlačítek */
+            padding: 8px 16px;
+        }
+        select {
+            font-size: 18px; /* Větší text v select boxu */
+            padding: 8px;
         }
         #reader {
             width: 100%;
@@ -24,25 +37,28 @@
             min-width: 600px;
             max-width: 900px;
             margin: 10px auto;
-            border: none;  /* Odstraníme rámeček celé tabulky */
+            border: none;
+            font-size: 20px; /* Větší text v tabulce */
         }
         th, td { 
-            border: none;  /* Odstraníme všechny rámečky */
-            border-bottom: 1px solid #ddd;  /* Přidáme pouze spodní čáru */
-            padding: 8px; 
+            border: none;
+            border-bottom: 1px solid #ddd;
+            padding: 12px 8px; /* Větší padding buněk */
             text-align: left;
         }
         th {
-            border-bottom: 2px solid #000;  /* Silnější čára pod hlavičkou */
+            border-bottom: 2px solid #000;
+            font-size: 22px; /* Ještě větší text v hlavičce */
         }
         .delete-btn {
             background-color: #ff4444;
             color: white;
             border: none;
-            padding: 2px 6px;
+            padding: 4px 10px; /* Větší tlačítko */
             cursor: pointer;
             border-radius: 3px;
             margin-left: 5px;
+            font-size: 16px;
         }
         .quantity-container {
             display: flex;
@@ -58,19 +74,19 @@
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 2px 6px;
+            padding: 4px 10px; /* Větší tlačítko */
             cursor: pointer;
             border-radius: 3px;
-            font-size: 12px;
+            font-size: 16px;
         }
         .edit-qty-btn {
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 2px 6px;
+            padding: 4px 10px; /* Větší tlačítko */
             cursor: pointer;
             border-radius: 3px;
-            font-size: 12px;
+            font-size: 16px;
         }
         .actions-container {
             display: flex;
@@ -90,6 +106,21 @@
             color: #666;
             display: block;
             margin-top: 2px;
+        }
+        #debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            font-family: monospace;
+            font-size: 16px; /* Větší debug text */
+        }
+        /* Zvětšení mezer mezi řádky v tabulce */
+        tr {
+            line-height: 1.5;
+        }
+        /* Větší text pro množství a cenu */
+        .quantity-value, .price-value {
+            font-size: 20px;
         }
     </style>
 </head>
