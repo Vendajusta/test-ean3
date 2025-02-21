@@ -127,7 +127,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vyat kameru</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -326,6 +326,59 @@
             return qty ? qty + ' ks' : '-';
         }
 
+        function saveTableToStorage() {
+            const tableData = [];
+            document.querySelectorAll("#product-table tr").forEach(row => {
+                const rowData = {
+                    number: row.cells[0].textContent,
+                    intCode: row.cells[1].textContent,
+                    name: row.cells[2].textContent,
+                    quantity: row.querySelector('.quantity-value').textContent,
+                    price: row.querySelector('.price-value').textContent,
+                    ean: row.querySelector('.actions-container span').textContent
+                };
+                tableData.push(rowData);
+            });
+            localStorage.setItem('scannedItems', JSON.stringify(tableData));
+        }
+
+        function loadTableFromStorage() {
+            const savedData = localStorage.getItem('scannedItems');
+            if (savedData) {
+                const tableData = JSON.parse(savedData);
+                const table = document.getElementById("product-table");
+                table.innerHTML = ''; // Vyčistíme tabulku
+
+                tableData.forEach(item => {
+                    let row = `
+                        <tr>
+                            <td>${item.number}</td>
+                            <td>${item.intCode}</td>
+                            <td>${item.name}</td>
+                            <td>
+                                <div class="quantity-container">
+                                    <span class="quantity-value">${item.quantity}</span>
+                                    <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="price-container">
+                                    <span class="price-value">${item.price}</span>
+                                    <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="actions-container">
+                                    <span>${item.ean}</span>
+                                    <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                                </div>
+                            </td>
+                        </tr>`;
+                    table.innerHTML += row;
+                });
+            }
+        }
+
         function addProduct(code, name, quantity) {
             const product = database[code];
             const table = document.getElementById("product-table");
@@ -357,6 +410,7 @@
                         </td>
                     </tr>`;
                 table.innerHTML += row;
+                saveTableToStorage(); // Přidáme ukládání
             } else {
                 let row = `
                     <tr>
@@ -383,6 +437,7 @@
                         </td>
                     </tr>`;
                 document.getElementById("product-table").innerHTML += row;
+                saveTableToStorage(); // Přidáme ukládání
             }
         }
 
@@ -397,6 +452,7 @@
                     for (let i = 3; i < rows.length; i++) {
                         rows[i].cells[0].textContent = itemNumber++;
                     }
+                    saveTableToStorage(); // Přidáme ukládání
                 }
             }
         }
@@ -407,7 +463,9 @@
             const newPrice = prompt('Zadejte novou cenu:', currentPrice);
             
             if (newPrice !== null && newPrice.trim() !== '') {
-                priceSpan.textContent = formatPrice(newPrice);            }
+                priceSpan.textContent = formatPrice(newPrice);
+                saveTableToStorage(); // Přidáme ukládání
+            }
         }
 
         function editQuantity(button) {
@@ -417,6 +475,7 @@
             
             if (newQty !== null && newQty.trim() !== '') {
                 qtySpan.textContent = newQty + ' ks';
+                saveTableToStorage(); // Přidáme ukládání
             }
         }
 
@@ -486,6 +545,19 @@
             const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
+
+        window.addEventListener('load', () => {
+            loadTableFromStorage();
+            loadDatabase();
+        });
+
+        function clearStoredData() {
+            if (confirm('Opravdu chcete vymazat všechny naskenované položky?')) {
+                localStorage.removeItem('scannedItems');
+                document.getElementById("product-table").innerHTML = '';
+            }
+        }
     </script>
+    <button onclick="clearStoredData()" style="margin-top: 10px; background-color: #ff4444; color: white;">Vymazat všechny položky</button>
 </body>
 </html>
