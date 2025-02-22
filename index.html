@@ -57,6 +57,11 @@
         .summary-row td {
             border-top: 2px solid #000;
         }
+        .total-cell {
+            white-space: nowrap;
+            text-align: right;
+            padding-right: 20px !important;
+        }
         .delete-btn {
             background-color: #ff4444;
             color: white;
@@ -134,7 +139,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybt kameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -157,10 +162,11 @@
             <tbody id="product-table"></tbody>
             <tfoot>
                 <tr class="summary-row">
-                    <td colspan="4">Celkem:</td>
-                    <td id="total-price">0,00</td>
-                    <td id="total-vat">0,00</td>
-                    <td id="total-with-vat">0,00</td>
+                    <td colspan="7" class="total-cell">
+                        součet: <span id="total-price">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
+                        DPH: <span id="total-vat">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
+                        celkem: <span id="total-with-vat">0,00 Kč</span>
+                    </td>
                 </tr>
             </tfoot>
         </table>
