@@ -56,6 +56,11 @@
         }
         .summary-row td {
             border-top: 2px solid #000;
+            padding-top: 20px; /* Add more space above the summary */
+        }
+        .empty-row td {
+            height: 20px;
+            border: none;
         }
         .total-cell {
             white-space: nowrap;
@@ -160,6 +165,9 @@
             </thead>
             <tbody id="product-table"></tbody>
             <tfoot>
+                <tr class="empty-row">
+                    <td colspan="7"></td>
+                </tr>
                 <tr class="summary-row">
                     <td colspan="7" class="total-cell">
                         součet: <span id="total-price">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
