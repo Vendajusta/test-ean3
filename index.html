@@ -545,13 +545,11 @@
                 ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'DPH', 'EAN']
             ];
 
-            // Odstraníme duplicitní hlavičku a rovnou přidáváme data
             const tableData = [];
             document.querySelectorAll("#product-table tr").forEach((row, index) => {
                 const rowData = [];
                 row.querySelectorAll("td").forEach((cell, cellIndex) => {
                     if (cellIndex === 2) {
-                        // Spojíme název a text do jednoho řádku
                         rowData.push(cell.innerText.replace(/\n/g, ' '));
                     } else if (cellIndex === 3) {
                         rowData.push(cell.querySelector('.quantity-value').innerText);
@@ -566,14 +564,15 @@
                 tableData.push(rowData);
             });
 
-            // Přidat řádek s celkovými součty
+            // Add empty row before totals
+            tableData.push(['', '', '', '', '', '', '']);
+
+            // Add totals row
             const totalPrice = document.getElementById('total-price').textContent;
             const totalVat = document.getElementById('total-vat').textContent;
             const totalWithVat = document.getElementById('total-with-vat').textContent;
-            
             tableData.push(['', '', 'CELKEM:', '', totalPrice, totalVat, totalWithVat]);
 
-            // Spojíme hlavičku dokumentu a data tabulky
             const finalData = [...headerRows, ...tableData];
 
             const ws = XLSX.utils.aoa_to_sheet(finalData);
