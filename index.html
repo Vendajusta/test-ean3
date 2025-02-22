@@ -139,7 +139,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybt kameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -528,6 +528,7 @@
             const wb = XLSX.utils.book_new();
             
             const headerRows = [
+                ['Dodací list/daňový doklad' , '', '', '', '', '', ''],               
                 ['Datum zdanitelného plnění:' , '', '', '', '', '', ''],
                 ['Odběratel:' , '', '', '', '', '', ''],
                 ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo, Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', '', ''],
