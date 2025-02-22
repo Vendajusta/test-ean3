@@ -537,12 +537,12 @@
             const wb = XLSX.utils.book_new();
             
             const headerRows = [
-                ['Dodací list/daňový doklad' , '', '', '', '', '', ''],               
-                ['Datum zdanitelného plnění:' , '', '', '', '', '', ''],
-                ['Odběratel:' , '', '', '', '', '', ''],
-                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo, Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', '', ''],
-                ['', '', '', '', '', '', ''],
-                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'DPH', 'EAN']
+                ['Dodací list/daňový doklad' , '', '', '', '', ''],               
+                ['Datum zdanitelného plnění:' , '', '', '', '', ''],
+                ['Odběratel:' , '', '', '', '', ''],
+                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo, Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', ''],
+                ['', '', '', '', '', ''],
+                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']
             ];
 
             const tableData = [];
@@ -565,13 +565,16 @@
             });
 
             // Add empty row before totals
-            tableData.push(['', '', '', '', '', '', '']);
+            tableData.push(['', '', '', '', '', '']);
 
-            // Add totals row
+            // Add totals rows vertically
             const totalPrice = document.getElementById('total-price').textContent;
             const totalVat = document.getElementById('total-vat').textContent;
             const totalWithVat = document.getElementById('total-with-vat').textContent;
-            tableData.push(['', '', `Součet: ${totalPrice}  DPH: ${totalVat}  Celkem: ${totalWithVat}`, '', '', '', '']);
+            
+            tableData.push(['', '', 'Součet:', '', totalPrice, '']);
+            tableData.push(['', '', 'DPH:', '', totalVat, '']);
+            tableData.push(['', '', 'Celkem:', '', totalWithVat, '']);
 
             const finalData = [...headerRows, ...tableData];
 
@@ -579,12 +582,12 @@
             
             // Nastavení širších sloupců pro lepší využití A4
             ws['!cols'] = [
-                {wch: 6},    // Č. (mírně širší)
-                {wch: 20},   // Int. kód (širší)
-                {wch: 55},   // Název (výrazně širší)
-                {wch: 12},   // MJ (širší pro "XX ks")
-                {wch: 15},   // Cena (širší pro částky)
-                {wch: 20}    // EAN (širší pro čitelnost)
+                {wch: 6},    // Č.
+                {wch: 20},   // Int. kód
+                {wch: 55},   // Název
+                {wch: 12},   // MJ
+                {wch: 15},   // Cena
+                {wch: 20}    // EAN
             ];
 
             // Přidáme nastavení pro výšku papíru A4
