@@ -541,8 +541,8 @@
                 ['Datum zdanitelného plnění:' , '', '', '', '', '', ''],
                 ['Odběratel:' , '', '', '', '', '', ''],
                 ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo, Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', '', ''],
-                ['', '', '', '', '', '', ''], // prázdný řádek pro oddělení
-                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena','EAN','',]
+                ['', '', '', '', '', '', ''],
+                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'DPH', 'EAN']
             ];
 
             const tableData = [];
@@ -571,7 +571,7 @@
             const totalPrice = document.getElementById('total-price').textContent;
             const totalVat = document.getElementById('total-vat').textContent;
             const totalWithVat = document.getElementById('total-with-vat').textContent;
-            tableData.push(['', '', 'cena:'totalPrice'DPH'totalVat 'celkem'totalWithVat,'','','', ]);
+            tableData.push(['', '', `Součet: ${totalPrice}  DPH: ${totalVat}  Celkem: ${totalWithVat}`, '', '', '', '']);
 
             const finalData = [...headerRows, ...tableData];
 
