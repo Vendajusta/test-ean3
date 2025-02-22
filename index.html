@@ -572,9 +572,9 @@
             const totalVat = document.getElementById('total-vat').textContent;
             const totalWithVat = document.getElementById('total-with-vat').textContent;
             
-            tableData.push(['', '', '', 'Součet:', totalPrice, '']);
+            tableData.push(['', '', '', 'Suma bez DPH:', totalPrice, '']);
             tableData.push(['', '', '', 'DPH 21 %:', totalVat, '']);
-            tableData.push(['', '', '', 'Celkem:', totalWithVat, '']);
+            tableData.push(['', '', '', 'Celkem s DPH:', totalWithVat, '']);
 
             const finalData = [...headerRows, ...tableData];
 
