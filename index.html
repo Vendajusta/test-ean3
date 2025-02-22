@@ -50,6 +50,13 @@
             border-bottom: 2px solid #000;
             font-size: 22px; /* Ještě větší text v hlavičce */
         }
+        .summary-row {
+            font-weight: bold;
+            background-color: #f8f8f8;
+        }
+        .summary-row td {
+            border-top: 2px solid #000;
+        }
         .delete-btn {
             background-color: #ff4444;
             color: white;
@@ -127,7 +134,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vybt kameru</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -143,10 +150,19 @@
                     <th>Název</th>
                     <th>MJ</th>
                     <th>Cena</th>
+                    <th>DPH</th>
                     <th>EAN</th>
                 </tr>
             </thead>
             <tbody id="product-table"></tbody>
+            <tfoot>
+                <tr class="summary-row">
+                    <td colspan="4">Celkem:</td>
+                    <td id="total-price">0,00</td>
+                    <td id="total-vat">0,00</td>
+                    <td id="total-with-vat">0,00</td>
+                </tr>
+            </tfoot>
         </table>
     </div>
     <button onclick="exportTableToCSV()">Exportovat jako tabulku</button>
@@ -376,6 +392,7 @@
                         </tr>`;
                     table.innerHTML += row;
                 });
+                calculateTotals();
             }
         }
 
@@ -410,6 +427,7 @@
                         </td>
                     </tr>`;
                 table.innerHTML += row;
+                calculateTotals();
                 saveTableToStorage(); // Přidáme ukládání
             } else {
                 let row = `
@@ -437,6 +455,7 @@
                         </td>
                     </tr>`;
                 document.getElementById("product-table").innerHTML += row;
+                calculateTotals();
                 saveTableToStorage(); // Přidáme ukládání
             }
         }
@@ -453,6 +472,7 @@
                         rows[i].cells[0].textContent = itemNumber++;
                     }
                     saveTableToStorage(); // Přidáme ukládání
+                    calculateTotals();
                 }
             }
         }
@@ -464,6 +484,7 @@
             
             if (newPrice !== null && newPrice.trim() !== '') {
                 priceSpan.textContent = formatPrice(newPrice);
+                calculateTotals();
                 saveTableToStorage(); // Přidáme ukládání
             }
         }
@@ -475,19 +496,38 @@
             
             if (newQty !== null && newQty.trim() !== '') {
                 qtySpan.textContent = newQty + ' ks';
+                calculateTotals();
                 saveTableToStorage(); // Přidáme ukládání
             }
+        }
+
+        function calculateTotals() {
+            let totalPrice = 0;
+            document.querySelectorAll("#product-table tr").forEach(row => {
+                const priceText = row.querySelector('.price-value').textContent;
+                const quantityText = row.querySelector('.quantity-value').textContent;
+                const price = parseFloat(priceText.replace(',', '.').replace(/[^\d.]/g, '') || 0);
+                const quantity = parseInt(quantityText.replace(/[^\d]/g, '') || 0);
+                totalPrice += price * quantity;
+            });
+
+            const vat = totalPrice * 0.21;
+            const totalWithVat = totalPrice + vat;
+
+            document.getElementById('total-price').textContent = totalPrice.toFixed(2).replace('.', ',') + ' Kč';
+            document.getElementById('total-vat').textContent = vat.toFixed(2).replace('.', ',') + ' Kč';
+            document.getElementById('total-with-vat').textContent = totalWithVat.toFixed(2).replace('.', ',') + ' Kč';
         }
 
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
             
             const headerRows = [
-                ['Datum zdanitelného plnění:' , '', '', '', '', ''],
-                ['Odběratel:' , '', '', '', '', ''],
-                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo, Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', ''],
-                ['', '', '', '', '', ''], // prázdný řádek pro oddělení
-                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']
+                ['Datum zdanitelného plnění:' , '', '', '', '', '', ''],
+                ['Odběratel:' , '', '', '', '', '', ''],
+                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo, Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', ''], // prázdný řádek pro oddělení
+                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'DPH', 'EAN']
             ];
 
             // Odstraníme duplicitní hlavičku a rovnou přidáváme data
@@ -510,6 +550,13 @@
                 });
                 tableData.push(rowData);
             });
+
+            // Přidat řádek s celkovými součty
+            const totalPrice = document.getElementById('total-price').textContent;
+            const totalVat = document.getElementById('total-vat').textContent;
+            const totalWithVat = document.getElementById('total-with-vat').textContent;
+            
+            tableData.push(['', '', 'CELKEM:', '', totalPrice, totalVat, totalWithVat]);
 
             // Spojíme hlavičku dokumentu a data tabulky
             const finalData = [...headerRows, ...tableData];
