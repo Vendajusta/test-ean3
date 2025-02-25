@@ -309,21 +309,35 @@
                 document.getElementById('stop-button').textContent = 'Pozastavit skenování';
                 scanning = true;
 
-                let lastVibrateTime = 0;
-    
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 250, height: 100 },
+                    aspectRatio: 1.0,
+                    formatsToSupport: [
+                        Html5QrcodeSupportedFormats.EAN_13,
+                        Html5QrcodeSupportedFormats.EAN_8,
+                        Html5QrcodeSupportedFormats.UPC_A,
+                        Html5QrcodeSupportedFormats.UPC_E
+                    ],
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    },
+                    videoConstraints: {
+                        width: { min: 640, ideal: 1280, max: 1920 },
+                        height: { min: 480, ideal: 720, max: 1080 },
+                        facingMode: "environment"
+                    }
+                };
+
                 await html5QrcodeScanner.start(
                     cameraId,
-                    {
-                        fps: 10,
-                        qrbox: { width: 250, height: 100 },
-                        aspectRatio: 1.0
-                    },
+                    config,
                     (decodedText) => {
                         if (!scanning) return;
                         const now = Date.now();
                         if (decodedText === lastCode && now - lastTime < 2000) return;
                         
-                        navigator.vibrate(200); // Spustí vibraci okamžitě
+                        navigator.vibrate(200);
 
                         lastCode = decodedText;
                         lastTime = now;
@@ -333,7 +347,7 @@
                             let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
                             let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
                             if (quantity) addProduct(decodedText, name, quantity);
-                        }, 50); // Krátká prodleva pro zajištění, že vibrace proběhne dříve než prompt
+                        }, 50);
                     },
                     (errorMessage) => {
                         if (!errorMessage.includes("No barcode detected")) {
