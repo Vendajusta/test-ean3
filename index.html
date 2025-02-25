@@ -154,6 +154,55 @@
             align-items: center;
             gap: 5px;
         }
+        .custom-prompt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .custom-prompt-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 80%;
+            width: 400px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .custom-prompt-message {
+            margin-bottom: 15px;
+            white-space: pre-line;
+        }
+        .custom-prompt-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .custom-prompt-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .custom-prompt-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .custom-prompt-button.primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .custom-prompt-button.secondary {
+            background: #ccc;
+            color: black;
+        }
     </style>
 </head>
 <body>
@@ -342,24 +391,21 @@
                         lastCode = decodedText;
                         lastTime = now;
 
-                        setTimeout(() => {
+                        setTimeout(async () => {
                             let product = database[decodedText];
-                            let promptMessage;
-                            let quantity;
                             
                             if (product) {
-                                promptMessage = `Název: ${product.name}\nPopis: ${product.text}\nCena: ${product.price}\nEAN: ${decodedText}\n\nZadejte počet kusů:`;
-                                quantity = prompt(promptMessage, 1);
-                                if (quantity) addProduct(decodedText, name, quantity);
+                                let promptMessage = `Název: ${product.name}\nPopis: ${product.text}\nCena: ${product.price}\nEAN: ${decodedText}\n\nZadejte počet kusů:`;
+                                let quantity = await customPrompt(promptMessage, '1');
+                                if (quantity) addProduct(decodedText, product.name, quantity);
                             } else {
-                                let name = prompt('Neznámý produkt!\n\nZadejte název:', 'Neznámý produkt');
+                                let name = await customPrompt('Neznámý produkt!\n\nZadejte název:', 'Neznámý produkt');
                                 if (name) {
-                                    let text = prompt('Zadejte popis:', '');
-                                    let price = prompt('Zadejte cenu:', '');
-                                    let quantity = prompt(`Název: ${name}\nPopis: ${text}\nCena: ${price}\nEAN: ${decodedText}\n\nZadejte počet kusů:`, 1);
+                                    let text = await customPrompt('Zadejte popis:', '');
+                                    let price = await customPrompt('Zadejte cenu:', '');
+                                    let quantity = await customPrompt(`Název: ${name}\nPopis: ${text}\nCena: ${price}\nEAN: ${decodedText}\n\nZadejte počet kusů:`, '1');
                                     
                                     if (quantity) {
-                                        // Vytvoříme dočasný produkt v databázi
                                         database[decodedText] = {
                                             intCode: '-',
                                             name: name,
@@ -557,10 +603,10 @@
             }
         }
 
-        function editPrice(button) {
+        async function editPrice(button) {
             const priceSpan = button.previousElementSibling;
             const currentPrice = priceSpan.textContent.replace(',00', '');
-            const newPrice = prompt('Zadejte novou cenu:', currentPrice);
+            const newPrice = await customPrompt('Zadejte novou cenu:', currentPrice);
             
             if (newPrice !== null && newPrice.trim() !== '') {
                 priceSpan.textContent = formatPrice(newPrice);
@@ -569,10 +615,10 @@
             }
         }
 
-        function editQuantity(button) {
+        async function editQuantity(button) {
             const qtySpan = button.previousElementSibling;
             const currentQty = qtySpan.textContent.replace(' ks', '');
-            const newQty = prompt('Zadejte nové množství:', currentQty);
+            const newQty = await customPrompt('Zadejte nové množství:', currentQty);
             
             if (newQty !== null && newQty.trim() !== '') {
                 qtySpan.textContent = newQty + ' ks';
@@ -581,10 +627,10 @@
             }
         }
 
-        function editName(button) {
+        async function editName(button) {
             const nameSpan = button.previousElementSibling;
             const currentName = nameSpan.textContent;
-            const newName = prompt('Zadejte nový název:', currentName);
+            const newName = await customPrompt('Zadejte nový název:', currentName);
             
             if (newName !== null && newName.trim() !== '') {
                 nameSpan.textContent = newName;
@@ -697,6 +743,52 @@
                 localStorage.removeItem('scannedItems');
                 document.getElementById("product-table").innerHTML = '';
             }
+        }
+
+        function customPrompt(message, defaultValue = '') {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'custom-prompt-overlay';
+                
+                overlay.innerHTML = `
+                    <div class="custom-prompt-box">
+                        <div class="custom-prompt-message">${message}</div>
+                        <input type="text" class="custom-prompt-input" value="${defaultValue}">
+                        <div class="custom-prompt-buttons">
+                            <button class="custom-prompt-button secondary" data-action="cancel">Zrušit</button>
+                            <button class="custom-prompt-button primary" data-action="ok">OK</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(overlay);
+                const input = overlay.querySelector('input');
+                input.focus();
+                input.select();
+
+                overlay.addEventListener('click', (e) => {
+                    const action = e.target.getAttribute('data-action');
+                    if (action === 'cancel') {
+                        document.body.removeChild(overlay);
+                        resolve(null);
+                    } else if (action === 'ok') {
+                        const value = input.value;
+                        document.body.removeChild(overlay);
+                        resolve(value);
+                    }
+                });
+
+                input.addEventListener('keyup', (e) => {
+                    if (e.key === 'Enter') {
+                        const value = input.value;
+                        document.body.removeChild(overlay);
+                        resolve(value);
+                    } else if (e.key === 'Escape') {
+                        document.body.removeChild(overlay);
+                        resolve(null);
+                    }
+                });
+            });
         }
     </script>
     <button onclick="clearStoredData()" style="margin-top: 10px; background-color: #ff4444; color: white;">Vymazat všechny položky</button>
