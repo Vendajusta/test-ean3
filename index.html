@@ -344,11 +344,32 @@
 
                         setTimeout(() => {
                             let product = database[decodedText];
-                            let promptMessage = product ? 
-                                `Název: ${product.name}\nPopis: ${product.text}\nEAN: ${decodedText}\n\nZadejte počet kusů:` : 
-                                `Neznámý produkt\nEAN: ${decodedText}\n\nZadejte počet kusů:`;
-                            let quantity = prompt(promptMessage, 1);
-                            if (quantity) addProduct(decodedText, name, quantity);
+                            let promptMessage;
+                            let quantity;
+                            
+                            if (product) {
+                                promptMessage = `Název: ${product.name}\nPopis: ${product.text}\nCena: ${product.price}\nEAN: ${decodedText}\n\nZadejte počet kusů:`;
+                                quantity = prompt(promptMessage, 1);
+                                if (quantity) addProduct(decodedText, name, quantity);
+                            } else {
+                                let name = prompt('Neznámý produkt!\n\nZadejte název:', 'Neznámý produkt');
+                                if (name) {
+                                    let text = prompt('Zadejte popis:', '');
+                                    let price = prompt('Zadejte cenu:', '');
+                                    let quantity = prompt(`Název: ${name}\nPopis: ${text}\nCena: ${price}\nEAN: ${decodedText}\n\nZadejte počet kusů:`, 1);
+                                    
+                                    if (quantity) {
+                                        // Vytvoříme dočasný produkt v databázi
+                                        database[decodedText] = {
+                                            intCode: '-',
+                                            name: name,
+                                            text: text || '',
+                                            price: price || '-'
+                                        };
+                                        addProduct(decodedText, name, quantity);
+                                    }
+                                }
+                            }
                         }, 50);
                     },
                     (errorMessage) => {
