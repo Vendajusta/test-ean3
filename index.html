@@ -339,27 +339,33 @@
                     await html5QrcodeScanner.stop();
                 }
 
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                document.getElementById('debug-status').textContent = `Zařízení: ${isIOS ? 'iOS' : 'Android/jiné'}`;
+
                 html5QrcodeScanner = new Html5Qrcode("reader");
                 document.getElementById('stop-button').style.display = 'inline';
                 document.getElementById('stop-button').textContent = 'Pozastavit skenování';
                 scanning = true;
 
+                // Speciální konfigurace pro iOS
                 const config = {
-                    fps: 10,
+                    fps: isIOS ? 5 : 10,
                     qrbox: { width: 250, height: 100 },
                     aspectRatio: 1.0,
                     formatsToSupport: [
                         Html5QrcodeSupportedFormats.EAN_13,
                         Html5QrcodeSupportedFormats.EAN_8,
                         Html5QrcodeSupportedFormats.UPC_A,
-                        Html5QrcodeSupportedFormats.UPC_E
+                        Html5QrcodeSupportedFormats.UPC_E,
+                        Html5QrcodeSupportedFormats.CODE_128,
+                        Html5QrcodeSupportedFormats.CODE_39
                     ],
                     experimentalFeatures: {
                         useBarCodeDetectorIfSupported: true
                     },
                     videoConstraints: {
-                        width: { min: 640, ideal: 1280, max: 1920 },
-                        height: { min: 480, ideal: 720, max: 1080 },
+                        width: isIOS ? { ideal: 640, max: 1280 } : { min: 640, ideal: 1280, max: 1920 },
+                        height: isIOS ? { ideal: 480, max: 720 } : { min: 480, ideal: 720, max: 1080 },
                         facingMode: "environment"
                     }
                 };
@@ -372,10 +378,15 @@
                         const now = Date.now();
                         if (decodedText === lastCode && now - lastTime < 2000) return;
                         
-                        navigator.vibrate(200);
+                        if (navigator.vibrate) {
+                            navigator.vibrate(200);
+                        }
 
                         lastCode = decodedText;
                         lastTime = now;
+
+                        decodedText = normalizeEAN(decodedText);
+                        document.getElementById('debug-status').textContent = `Načtený kód: ${decodedText}`;
 
                         setTimeout(async () => {
                             let product = database[decodedText];
@@ -406,12 +417,24 @@
                     },
                     (errorMessage) => {
                         if (!errorMessage.includes("No barcode detected")) {
-                            console.error(errorMessage);
+                            console.error('Chyba skenování:', errorMessage);
+                            
+                            if (errorMessage.includes("Permission denied") || 
+                                errorMessage.includes("NotAllowedError") || 
+                                errorMessage.includes("permission")) {
+                                document.getElementById('debug-status').textContent = 
+                                    "Chyba: Nemáte povolení ke kameře. Zkontrolujte nastavení prohlížeče.";
+                            } else if (errorMessage.includes("NotReadableError") || 
+                                       errorMessage.includes("TrackStartError")) {
+                                document.getElementById('debug-status').textContent = 
+                                    "Chyba: Kamera je již používána jinou aplikací nebo není dostupná.";
+                            }
                         }
                     }
                 );
             } catch (err) {
                 console.error('Chyba:', err);
+                document.getElementById('debug-status').textContent = 'Chyba při spouštění kamery: ' + err.message;
                 alert('Chyba při spouštění kamery. Zkuste obnovit stránku.');
             }
         }
@@ -428,7 +451,19 @@
         }
 
         function normalizeEAN(code) {
-            return code.replace(/[^0-9]/g, '');
+            // Vylepšená normalizace pro iOS
+            const normalized = code.replace(/[^0-9]/g, '');
+            // Pokud je délka 12, pravděpodobně chybí kontrolní číslice EAN-13
+            if (normalized.length === 12) {
+                // Přidáme kontrolní číslici EAN-13
+                let sum = 0;
+                for (let i = 0; i < 12; i++) {
+                    sum += parseInt(normalized[i]) * (i % 2 === 0 ? 1 : 3);
+                }
+                const checkDigit = (10 - (sum % 10)) % 10;
+                return normalized + checkDigit;
+            }
+            return normalized;
         }
 
         function formatPrice(price) {
