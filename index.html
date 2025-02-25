@@ -140,6 +140,20 @@
         .quantity-value, .price-value {
             font-size: 20px;
         }
+        .edit-name-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 16px;
+        }
+        .name-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
@@ -384,7 +398,12 @@
                         <tr>
                             <td>${item.number}</td>
                             <td>${item.intCode}</td>
-                            <td>${item.name}</td>
+                            <td>
+                                <div class="name-container">
+                                    <span class="name-value">${item.name}</span>
+                                    <button class="edit-name-btn" onclick="editName(this)">✎</button>
+                                </div>
+                            </td>
                             <td>
                                 <div class="quantity-container">
                                     <span class="quantity-value">${item.quantity}</span>
@@ -420,7 +439,12 @@
                     <tr>
                         <td>${rowCount}</td>
                         <td>${product.intCode}</td>
-                        <td>${product.name} - ${product.text}</td>
+                        <td>
+                            <div class="name-container">
+                                <span class="name-value">${product.name} - ${product.text}</span>
+                                <button class="edit-name-btn" onclick="editName(this)">✎</button>
+                            </div>
+                        </td>
                         <td>
                             <div class="quantity-container">
                                 <span class="quantity-value">${quantity} ks</span>
@@ -448,7 +472,12 @@
                     <tr>
                         <td>${rowCount}</td>
                         <td>-</td>
-                        <td>Neznámý produkt</td>
+                        <td>
+                            <div class="name-container">
+                                <span class="name-value">Neznámý produkt</span>
+                                <button class="edit-name-btn" onclick="editName(this)">✎</button>
+                            </div>
+                        </td>
                         <td>
                             <div class="quantity-container">
                                 <span class="quantity-value">${quantity} ks</span>
@@ -512,6 +541,17 @@
                 qtySpan.textContent = newQty + ' ks';
                 calculateTotals();
                 saveTableToStorage(); // Přidáme ukládání
+            }
+        }
+
+        function editName(button) {
+            const nameSpan = button.previousElementSibling;
+            const currentName = nameSpan.textContent;
+            const newName = prompt('Zadejte nový název:', currentName);
+            
+            if (newName !== null && newName.trim() !== '') {
+                nameSpan.textContent = newName;
+                saveTableToStorage();
             }
         }
 
