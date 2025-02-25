@@ -159,7 +159,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vyat kameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -344,8 +344,10 @@
 
                         setTimeout(() => {
                             let product = database[decodedText];
-                            let name = product ? `${product.name} - ${product.text}` : "Neznámý produkt";
-                            let quantity = prompt(`Zadej počet kusů pro ${name} (${decodedText}):`, 1);
+                            let promptMessage = product ? 
+                                `Název: ${product.name}\nPopis: ${product.text}\nEAN: ${decodedText}\n\nZadejte počet kusů:` : 
+                                `Neznámý produkt\nEAN: ${decodedText}\n\nZadejte počet kusů:`;
+                            let quantity = prompt(promptMessage, 1);
                             if (quantity) addProduct(decodedText, name, quantity);
                         }, 50);
                     },
