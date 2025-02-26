@@ -617,17 +617,16 @@
         }
 
         function deleteRow(button) {
-            if (confirm('Opravdu chcete smazat tento řádek?')) {
+            if (window.confirm('Opravdu chcete smazat tento řádek?')) {
                 const row = button.closest('tr');
                 if (!row.classList.contains('header-row')) {
                     row.remove();
-                    // Přečíslování pouze položek (ne hlavičkových řádků)
                     const rows = document.getElementById("product-table").getElementsByTagName("tr");
-                    let itemNumber = 4; // Začínáme od 4, protože první 3 jsou hlavička
-                    for (let i = 3; i < rows.length; i++) {
+                    let itemNumber = 1;
+                    for (let i = 0; i < rows.length; i++) {
                         rows[i].cells[0].textContent = itemNumber++;
                     }
-                    saveTableToStorage(); // Přidáme ukládání
+                    saveTableToStorage();
                     calculateTotals();
                 }
             }
@@ -763,9 +762,10 @@
         });
 
         function clearStoredData() {
-            if (confirm('Opravdu chcete vymazat všechny naskenované položky?')) {
+            if (window.confirm('Opravdu chcete smazat všechny položky?')) {
                 localStorage.removeItem('scannedItems');
                 document.getElementById("product-table").innerHTML = '';
+                calculateTotals();
             }
         }
 
