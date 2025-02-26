@@ -502,6 +502,8 @@
                 table.innerHTML = ''; // Vyčistíme tabulku
 
                 tableData.forEach(item => {
+                    // Kontrola jestli je produkt v databázi
+                    const isKnownProduct = database[item.ean.replace('★', '').trim()];
                     let row = `
                         <tr>
                             <td>${item.number}</td>
@@ -526,7 +528,7 @@
                             </td>
                             <td>
                                 <div class="actions-container">
-                                    <span>${item.ean}</span>
+                                    <span>${isKnownProduct ? item.ean : item.ean + ' ★'}</span>
                                     <button class="delete-btn" onclick="deleteRow(this)">×</button>
                                 </div>
                             </td>
@@ -698,15 +700,19 @@
                 const rowData = [];
                 row.querySelectorAll("td").forEach((cell, cellIndex) => {
                     if (cellIndex === 2) {
-                        rowData.push(cell.innerText.replace(/\n/g, ' '));
+                        // Pro název bereme jen text bez HTML
+                        rowData.push(cell.querySelector('.name-value').textContent);
                     } else if (cellIndex === 3) {
-                        rowData.push(cell.querySelector('.quantity-value').innerText);
+                        // Pro množství bereme jen hodnotu
+                        rowData.push(cell.querySelector('.quantity-value').textContent);
                     } else if (cellIndex === 4) {
-                        rowData.push(cell.querySelector('.price-value').innerText);
+                        // Pro cenu bereme jen hodnotu
+                        rowData.push(cell.querySelector('.price-value').textContent);
                     } else if (cellIndex === 5) {
-                        rowData.push(cell.querySelector('.actions-container span').innerText);
+                        // Pro EAN bereme text včetně hvězdičky
+                        rowData.push(cell.querySelector('.actions-container span').textContent);
                     } else {
-                        rowData.push(cell.innerText);
+                        rowData.push(cell.textContent);
                     }
                 });
                 tableData.push(rowData);
