@@ -194,6 +194,27 @@
             font-size: 20px;
             margin-left: 5px;
         }
+        .custom-prompt-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .custom-prompt-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .custom-prompt-button.primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .custom-prompt-button.secondary {
+            background-color: #f44336;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -616,47 +637,72 @@
             }
         }
 
-        function customConfirm(message) {
+        function customDialog(message, options = {}) {
             return new Promise((resolve) => {
                 const overlay = document.createElement('div');
                 overlay.className = 'custom-prompt-overlay';
                 
+                const buttons = options.showInput 
+                    ? `<button class="custom-prompt-button secondary" data-action="cancel">Zrušit</button>
+                       <button class="custom-prompt-button primary" data-action="ok">OK</button>`
+                    : `<button class="custom-prompt-button secondary" data-action="cancel">Ne</button>
+                       <button class="custom-prompt-button primary" data-action="ok">Ano</button>`;
+
+                const input = options.showInput 
+                    ? `<input type="text" class="custom-prompt-input" value="${options.defaultValue || ''}">`
+                    : '';
+                
                 overlay.innerHTML = `
                     <div class="custom-prompt-box">
                         <div class="custom-prompt-message">${message}</div>
+                        ${input}
                         <div class="custom-prompt-buttons">
-                            <button class="custom-prompt-button secondary" data-action="cancel">Ne</button>
-                            <button class="custom-prompt-button primary" data-action="ok">Ano</button>
+                            ${buttons}
                         </div>
                     </div>
                 `;
 
                 document.body.appendChild(overlay);
+                
+                const inputEl = overlay.querySelector('input');
+                if (inputEl) {
+                    inputEl.focus();
+                    inputEl.select();
+                }
+
+                function closeDialog(value) {
+                    document.body.removeChild(overlay);
+                    resolve(value);
+                }
 
                 overlay.addEventListener('click', (e) => {
                     const action = e.target.getAttribute('data-action');
                     if (action === 'cancel') {
-                        document.body.removeChild(overlay);
-                        resolve(false);
+                        closeDialog(null);
                     } else if (action === 'ok') {
-                        document.body.removeChild(overlay);
-                        resolve(true);
+                        closeDialog(inputEl ? inputEl.value : true);
                     }
                 });
 
-                // Přidáme podporu pro klávesy
                 document.addEventListener('keyup', function handler(e) {
                     if (e.key === 'Escape') {
-                        document.body.removeChild(overlay);
                         document.removeEventListener('keyup', handler);
-                        resolve(false);
-                    } else if (e.key === 'Enter') {
-                        document.body.removeChild(overlay);
+                        closeDialog(null);
+                    } else if (e.key === 'Enter' && inputEl) {
                         document.removeEventListener('keyup', handler);
-                        resolve(true);
+                        closeDialog(inputEl.value);
                     }
                 });
             });
+        }
+
+        // Nahrazení stávajících funkcí
+        async function customPrompt(message, defaultValue = '') {
+            return customDialog(message, { showInput: true, defaultValue });
+        }
+
+        async function customConfirm(message) {
+            return customDialog(message, { showInput: false });
         }
 
         async function deleteRow(button) {
