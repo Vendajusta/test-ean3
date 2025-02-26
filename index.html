@@ -796,20 +796,20 @@
 
             const tableData = [];
             document.querySelectorAll("#product-table tr").forEach((row) => {
-                // Získáme hodnotu EAN a zkontrolujeme, jestli je v databázi
-                const eanCell = row.querySelector('.actions-container span');
-                const eanText = eanCell.textContent.trim();
-                const cleanEan = eanText.replace(' !', '').replace(' ★', ''); // Podporuje oba symboly
+                const name = row.querySelector('.name-container .name-value').textContent.trim();
+                const quantity = row.querySelector('.quantity-container .quantity-value').textContent.trim();
+                const price = row.querySelector('.price-container .price-value').textContent.trim();
+                const ean = row.querySelector('.actions-container span').textContent.trim();
+                const cleanEan = ean.replace(' !', '').replace(' ★', '');
                 const isKnownProduct = database[cleanEan];
 
                 const rowData = [
-                    row.cells[0].textContent.trim(),
-                    row.cells[1].textContent.trim(),
-                    row.querySelector('.name-container .name-value').textContent.trim(),
-                    row.querySelector('.quantity-container .quantity-value').textContent.trim(),
-                    row.querySelector('.price-container .price-value').textContent.trim(),
-                    // Přidáme vykřičník, pokud produkt není v databázi
-                    cleanEan + (!isKnownProduct ? ' !' : '')
+                    row.cells[0].textContent.trim(), // Číslo
+                    row.cells[1].textContent.trim(), // Int. kód
+                    name,   // Název bez HTML
+                    quantity, // Množství
+                    price,  // Cena
+                    cleanEan + (!isKnownProduct ? ' !' : '') // EAN s případným vykřičníkem
                 ];
                 tableData.push(rowData);
             });
