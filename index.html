@@ -524,8 +524,8 @@
                 table.innerHTML = '';
 
                 tableData.forEach(item => {
-                    // Odstranit případnou existující hvězdičku před kontrolou
-                    const cleanEan = item.ean.replace(' ★', '');
+                    // Odstranit případnou existující značku před kontrolou
+                    const cleanEan = item.ean.replace(' !', '').replace(' ★', ''); // Podporuje oba symboly pro zpětnou kompatibilitu
                     const isKnownProduct = database[cleanEan];
                     
                     let row = `
@@ -552,7 +552,7 @@
                             </td>
                             <td>
                                 <div class="actions-container">
-                                    <span>${cleanEan}${!isKnownProduct ? ' ★' : ''}</span>
+                                    <span>${cleanEan}${!isKnownProduct ? ' !' : ''}</span>
                                     <button class="delete-btn" onclick="deleteRow(this)">×</button>
                                 </div>
                             </td>
@@ -626,7 +626,7 @@
                         </td>
                         <td>
                             <div class="actions-container">
-                                <span>${code} ★</span>
+                                <span>${code} !</span>
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
@@ -799,7 +799,7 @@
                 // Získáme hodnotu EAN a zkontrolujeme, jestli je v databázi
                 const eanCell = row.querySelector('.actions-container span');
                 const eanText = eanCell.textContent.trim();
-                const cleanEan = eanText.replace(' ★', '');
+                const cleanEan = eanText.replace(' !', '').replace(' ★', ''); // Podporuje oba symboly
                 const isKnownProduct = database[cleanEan];
 
                 const rowData = [
@@ -808,8 +808,8 @@
                     row.querySelector('.name-container .name-value').textContent.trim(),
                     row.querySelector('.quantity-container .quantity-value').textContent.trim(),
                     row.querySelector('.price-container .price-value').textContent.trim(),
-                    // Přidáme hvězdičku, pokud produkt není v databázi
-                    cleanEan + (!isKnownProduct ? ' ★' : '')
+                    // Přidáme vykřičník, pokud produkt není v databázi
+                    cleanEan + (!isKnownProduct ? ' !' : '')
                 ];
                 tableData.push(rowData);
             });
