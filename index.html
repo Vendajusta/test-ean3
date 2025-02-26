@@ -573,12 +573,7 @@
                     <tr>
                         <td>${rowCount}</td>
                         <td>${product.intCode}</td>
-                        <td>
-                            <div class="name-container">
-                                <span class="name-value">${product.name} - ${product.text}</span>
-                                <button class="edit-name-btn" onclick="editName(this)">✎</button>
-                            </div>
-                        </td>
+                        <td>${product.name} - ${product.text}</td>
                         <td>
                             <div class="quantity-container">
                                 <span class="quantity-value">${quantity} ks</span>
@@ -599,19 +594,12 @@
                         </td>
                     </tr>`;
                 table.innerHTML += row;
-                calculateTotals();
-                saveTableToStorage();
             } else {
                 let row = `
                     <tr>
                         <td>${rowCount}</td>
                         <td>-</td>
-                        <td>
-                            <div class="name-container">
-                                <span class="name-value">${name}</span>
-                                <button class="edit-name-btn" onclick="editName(this)">✎</button>
-                            </div>
-                        </td>
+                        <td>${name}</td>
                         <td>
                             <div class="quantity-container">
                                 <span class="quantity-value">${quantity} ks</span>
@@ -631,10 +619,10 @@
                             </div>
                         </td>
                     </tr>`;
-                document.getElementById("product-table").innerHTML += row;
-                calculateTotals();
-                saveTableToStorage();
+                table.innerHTML += row;
             }
+            calculateTotals();
+            saveTableToStorage();
         }
 
         function customDialog(message, options = {}) {
