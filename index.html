@@ -189,6 +189,11 @@
             border: 1px solid #ccc;
             border-radius: 4px;
         }
+        .unknown-product {
+            color: #ff4444;
+            font-size: 20px;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
@@ -595,7 +600,7 @@
                         </td>
                         <td>
                             <div class="actions-container">
-                                <span>${code} ⭐</span>
+                                <span>${code}<span class="unknown-product">★</span></span>
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
