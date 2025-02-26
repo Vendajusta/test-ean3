@@ -499,11 +499,13 @@
             if (savedData) {
                 const tableData = JSON.parse(savedData);
                 const table = document.getElementById("product-table");
-                table.innerHTML = ''; // Vyčistíme tabulku
+                table.innerHTML = '';
 
                 tableData.forEach(item => {
-                    // Kontrola jestli je produkt v databázi
-                    const isKnownProduct = database[item.ean.replace('★', '').trim()];
+                    // Odstranit případnou existující hvězdičku před kontrolou
+                    const cleanEan = item.ean.replace(' ★', '');
+                    const isKnownProduct = database[cleanEan];
+                    
                     let row = `
                         <tr>
                             <td>${item.number}</td>
@@ -528,7 +530,7 @@
                             </td>
                             <td>
                                 <div class="actions-container">
-                                    <span>${isKnownProduct ? item.ean : item.ean + ' ★'}</span>
+                                    <span>${cleanEan}${!isKnownProduct ? ' ★' : ''}</span>
                                     <button class="delete-btn" onclick="deleteRow(this)">×</button>
                                 </div>
                             </td>
