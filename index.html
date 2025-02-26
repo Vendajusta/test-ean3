@@ -200,6 +200,7 @@
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
         <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -812,6 +813,25 @@
                     }
                 });
             });
+        }
+
+        async function addManualItem() {
+            const name = await customPrompt('Zadejte název:', '');
+            if (name) {
+                const price = await customPrompt('Zadejte cenu:', '');
+                const quantity = await customPrompt(`Název: ${name}\nCena: ${price}\n\nZadejte počet kusů:`, '1');
+                
+                if (quantity) {
+                    const randomEAN = 'M' + Date.now(); // Generujeme unikátní kód pro manuální položku
+                    database[randomEAN] = {
+                        intCode: '-',
+                        name: name,
+                        text: '',
+                        price: price || '-'
+                    };
+                    addProduct(randomEAN, name, quantity);
+                }
+            }
         }
     </script>
     <button onclick="clearStoredData()" style="margin-top: 10px; background-color: #ff4444; color: white;">Vymazat všechny položky</button>
