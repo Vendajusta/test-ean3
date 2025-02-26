@@ -696,25 +696,16 @@
             ];
 
             const tableData = [];
-            document.querySelectorAll("#product-table tr").forEach((row, index) => {
-                const rowData = [];
-                row.querySelectorAll("td").forEach((cell, cellIndex) => {
-                    if (cellIndex === 2) {
-                        // Pro název bereme jen text bez HTML
-                        rowData.push(cell.querySelector('.name-value').textContent);
-                    } else if (cellIndex === 3) {
-                        // Pro množství bereme jen hodnotu
-                        rowData.push(cell.querySelector('.quantity-value').textContent);
-                    } else if (cellIndex === 4) {
-                        // Pro cenu bereme jen hodnotu
-                        rowData.push(cell.querySelector('.price-value').textContent);
-                    } else if (cellIndex === 5) {
-                        // Pro EAN bereme text včetně hvězdičky
-                        rowData.push(cell.querySelector('.actions-container span').textContent);
-                    } else {
-                        rowData.push(cell.textContent);
-                    }
-                });
+            document.querySelectorAll("#product-table tr").forEach((row) => {
+                const cells = row.cells;
+                const rowData = [
+                    cells[0].textContent, // Číslo
+                    cells[1].textContent, // Int. kód
+                    cells[2].querySelector('.name-value').textContent.trim(), // Název
+                    cells[3].querySelector('.quantity-value').textContent.trim(), // Množství
+                    cells[4].querySelector('.price-value').textContent.trim(), // Cena
+                    cells[5].querySelector('.actions-container span').textContent.trim() // EAN
+                ];
                 tableData.push(rowData);
             });
 
