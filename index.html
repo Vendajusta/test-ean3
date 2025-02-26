@@ -199,7 +199,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kame</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -616,20 +616,70 @@
             }
         }
 
-        function deleteRow(button) {
-            const confirmed = confirm('Opravdu chcete smazat tento řádek?');
+        function customConfirm(message) {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'custom-prompt-overlay';
+                
+                overlay.innerHTML = `
+                    <div class="custom-prompt-box">
+                        <div class="custom-prompt-message">${message}</div>
+                        <div class="custom-prompt-buttons">
+                            <button class="custom-prompt-button secondary" data-action="cancel">Ne</button>
+                            <button class="custom-prompt-button primary" data-action="ok">Ano</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(overlay);
+
+                overlay.addEventListener('click', (e) => {
+                    const action = e.target.getAttribute('data-action');
+                    if (action === 'cancel') {
+                        document.body.removeChild(overlay);
+                        resolve(false);
+                    } else if (action === 'ok') {
+                        document.body.removeChild(overlay);
+                        resolve(true);
+                    }
+                });
+
+                // Přidáme podporu pro klávesy
+                document.addEventListener('keyup', function handler(e) {
+                    if (e.key === 'Escape') {
+                        document.body.removeChild(overlay);
+                        document.removeEventListener('keyup', handler);
+                        resolve(false);
+                    } else if (e.key === 'Enter') {
+                        document.body.removeChild(overlay);
+                        document.removeEventListener('keyup', handler);
+                        resolve(true);
+                    }
+                });
+            });
+        }
+
+        async function deleteRow(button) {
+            const confirmed = await customConfirm('Opravdu chcete smazat tento řádek?');
             if (confirmed) {
                 const row = button.closest('tr');
-                if (!row.classList.contains('header-row')) {
-                    row.remove();
-                    const rows = document.getElementById("product-table").getElementsByTagName("tr");
-                    let itemNumber = 1;
-                    for (let i = 0; i < rows.length; i++) {
-                        rows[i].cells[0].textContent = itemNumber++;
-                    }
-                    saveTableToStorage();
-                    calculateTotals();
+                row.remove();
+                const rows = document.getElementById("product-table").getElementsByTagName("tr");
+                let itemNumber = 1;
+                for (let i = 0; i < rows.length; i++) {
+                    rows[i].cells[0].textContent = itemNumber++;
                 }
+                saveTableToStorage();
+                calculateTotals();
+            }
+        }
+
+        async function clearStoredData() {
+            const confirmed = await customConfirm('Opravdu chcete smazat všechny položky?');
+            if (confirmed) {
+                localStorage.removeItem('scannedItems');
+                document.getElementById("product-table").innerHTML = '';
+                calculateTotals();
             }
         }
 
@@ -761,61 +811,6 @@
             loadTableFromStorage();
             loadDatabase();
         });
-
-        function clearStoredData() {
-            const confirmed = confirm('Opravdu chcete smazat všechny položky?');
-            if (confirmed) {
-                localStorage.removeItem('scannedItems');
-                document.getElementById("product-table").innerHTML = '';
-                calculateTotals();
-            }
-        }
-
-        function customPrompt(message, defaultValue = '') {
-            return new Promise((resolve) => {
-                const overlay = document.createElement('div');
-                overlay.className = 'custom-prompt-overlay';
-                
-                overlay.innerHTML = `
-                    <div class="custom-prompt-box">
-                        <div class="custom-prompt-message">${message}</div>
-                        <input type="text" class="custom-prompt-input" value="${defaultValue}">
-                        <div class="custom-prompt-buttons">
-                            <button class="custom-prompt-button secondary" data-action="cancel">Zrušit</button>
-                            <button class="custom-prompt-button primary" data-action="ok">OK</button>
-                        </div>
-                    </div>
-                `;
-
-                document.body.appendChild(overlay);
-                const input = overlay.querySelector('input');
-                input.focus();
-                input.select();
-
-                overlay.addEventListener('click', (e) => {
-                    const action = e.target.getAttribute('data-action');
-                    if (action === 'cancel') {
-                        document.body.removeChild(overlay);
-                        resolve(null);
-                    } else if (action === 'ok') {
-                        const value = input.value;
-                        document.body.removeChild(overlay);
-                        resolve(value);
-                    }
-                });
-
-                input.addEventListener('keyup', (e) => {
-                    if (e.key === 'Enter') {
-                        const value = input.value;
-                        document.body.removeChild(overlay);
-                        resolve(value);
-                    } else if (e.key === 'Escape') {
-                        document.body.removeChild(overlay);
-                        resolve(null);
-                    }
-                });
-            });
-        }
 
         async function addManualItem() {
             const name = await customPrompt('Zadejte název:', '');
