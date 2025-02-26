@@ -851,12 +851,27 @@
                 {wch: 20}    // EAN
             ];
 
-            // Přidáme nastavení pro výšku papíru A4
+            // Přidáme vylepšené nastavení pro tisk na A4
             ws['!pageSetup'] = {
                 paperSize: 9, // A4
                 orientation: 'portrait',
-                fitToPage: true
+                fitToPage: true,
+                fitToHeight: 1, // Přizpůsobit na výšku jedné stránky
+                fitToWidth: 1,  // Přizpůsobit na šířku jedné stránky
+                scale: 85       // Mírně zmenšit pro lepší čitelnost
             };
+
+            // Přidáme nastavení tisku
+            ws['!print'] = {
+                gridLines: true,    // Zobrazit mřížku
+                horizontalCentered: true,  // Centrovat horizontálně
+                verticalCentered: true    // Centrovat vertikálně
+            };
+
+            // Nastavíme oblast tisku
+            ws['!printArea'] = [
+                {s: {r: 0, c: 0}, e: {r: finalData.length - 1, c: 5}}
+            ];
 
             // Upravíme sloučení buněk pro hlavičku
             ws['!merges'] = [
