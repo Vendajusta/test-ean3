@@ -848,6 +848,33 @@
                 {s: {r: 3, c: 0}, e: {r: 3, c: 5}}   // Prázdný řádek
             ];
 
+            // Přidáme ohraničení a styly
+            ws['!rows'] = Array(finalData.length).fill({ hpt: 25 }); // Výška řádků
+            
+            // Nastavíme ohraničení pro celou tabulku
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for(let R = range.s.r; R <= range.e.r; R++) {
+                for(let C = range.s.c; C <= range.e.c; C++) {
+                    const cell_ref = XLSX.utils.encode_cell({r: R, c: C});
+                    if(!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
+                    ws[cell_ref].s = {
+                        border: {
+                            top: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            left: { style: 'thin' },
+                            right: { style: 'thin' }
+                        },
+                        alignment: { vertical: 'center' } // Vertikální zarovnání na střed
+                    };
+                    
+                    // Přidáme silnější ohraničení pro hlavičku
+                    if (R === 5) {
+                        ws[cell_ref].s.border.bottom = { style: 'medium' };
+                        ws[cell_ref].s.font = { bold: true };
+                    }
+                }
+            }
+
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
             XLSX.writeFile(wb, fileName);
