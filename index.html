@@ -524,8 +524,8 @@
                 table.innerHTML = '';
 
                 tableData.forEach(item => {
-                    const cleanEan = item.ean.replace(' !', '').replace(' ★', ''); // Podporuje oba symboly pro zpětnou kompatibilitu
-                    const isKnownProduct = database[cleanEan];
+                    // Zachováme původní EAN kód včetně vykřičníku
+                    const savedEan = item.ean; // Původní uložený EAN i s případným vykřičníkem
                     
                     let row = `
                         <tr>
@@ -546,7 +546,7 @@
                             </td>
                             <td>
                                 <div class="actions-container">
-                                    <span>${cleanEan}${!isKnownProduct && cleanEan ? ' !' : ''}</span>
+                                    <span>${savedEan}</span>
                                     <button class="delete-btn" onclick="deleteRow(this)">×</button>
                                 </div>
                             </td>
@@ -563,6 +563,7 @@
             const rowCount = table.getElementsByTagName("tr").length + 1;
             
             if (product) {
+                // Známý produkt z databáze - bez vykřičníku
                 let row = `
                     <tr>
                         <td>${rowCount}</td>
@@ -588,7 +589,8 @@
                         </td>
                     </tr>`;
                 table.innerHTML += row;
-            } else if (code) { // Naskenovaná ale neznámá položka
+            } else if (code) {
+                // Naskenovaný ale neznámý produkt - s vykřičníkem
                 let row = `
                     <tr>
                         <td>${rowCount}</td>
