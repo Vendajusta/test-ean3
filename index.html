@@ -617,7 +617,8 @@
         }
 
         function deleteRow(button) {
-            if (window.confirm('Opravdu chcete smazat tento řádek?')) {
+            const confirmed = confirm('Opravdu chcete smazat tento řádek?');
+            if (confirmed) {
                 const row = button.closest('tr');
                 if (!row.classList.contains('header-row')) {
                     row.remove();
@@ -762,7 +763,8 @@
         });
 
         function clearStoredData() {
-            if (window.confirm('Opravdu chcete smazat všechny položky?')) {
+            const confirmed = confirm('Opravdu chcete smazat všechny položky?');
+            if (confirmed) {
                 localStorage.removeItem('scannedItems');
                 document.getElementById("product-table").innerHTML = '';
                 calculateTotals();
