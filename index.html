@@ -569,7 +569,7 @@
                     </tr>`;
                 table.innerHTML += row;
                 calculateTotals();
-                saveTableToStorage(); // Přidáme ukládání
+                saveTableToStorage();
             } else {
                 let row = `
                     <tr>
@@ -577,7 +577,7 @@
                         <td>-</td>
                         <td>
                             <div class="name-container">
-                                <span class="name-value">Neznámý produkt</span>
+                                <span class="name-value">${name}</span>
                                 <button class="edit-name-btn" onclick="editName(this)">✎</button>
                             </div>
                         </td>
@@ -595,14 +595,14 @@
                         </td>
                         <td>
                             <div class="actions-container">
-                                <span>${code}</span>
+                                <span>${code} ⭐</span>
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
                     </tr>`;
                 document.getElementById("product-table").innerHTML += row;
                 calculateTotals();
-                saveTableToStorage(); // Přidáme ukládání
+                saveTableToStorage();
             }
         }
 
