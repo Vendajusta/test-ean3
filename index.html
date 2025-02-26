@@ -604,7 +604,7 @@
                         </td>
                         <td>
                             <div class="actions-container">
-                                <span>${code}<span class="unknown-product">★</span></span>
+                                <span>${code} ★</span>
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
@@ -699,14 +699,14 @@
 
             const tableData = [];
             document.querySelectorAll("#product-table tr").forEach((row) => {
-                const cells = row.cells;
+                // Pro každý řádek získáváme jen čistý text bez HTML
                 const rowData = [
-                    cells[0].textContent, // Číslo
-                    cells[1].textContent, // Int. kód
-                    cells[2].querySelector('.name-value').textContent.trim(), // Název
-                    cells[3].querySelector('.quantity-value').textContent.trim(), // Množství
-                    cells[4].querySelector('.price-value').textContent.trim(), // Cena
-                    cells[5].querySelector('.actions-container span').textContent.trim() // EAN
+                    row.cells[0].textContent.trim(), // Číslo
+                    row.cells[1].textContent.trim(), // Int. kód
+                    row.querySelector('.name-container .name-value').textContent.trim(), // Název bez HTML
+                    row.querySelector('.quantity-container .quantity-value').textContent.trim(), // Množství bez HTML
+                    row.querySelector('.price-container .price-value').textContent.trim(), // Cena bez HTML
+                    row.querySelector('.actions-container span').textContent.trim() // Celý EAN včetně hvězdičky
                 ];
                 tableData.push(rowData);
             });
@@ -724,9 +724,8 @@
             tableData.push(['', '', '','', 'Celkem s DPH:', totalWithVat]);
 
             const finalData = [...headerRows, ...tableData];
-
             const ws = XLSX.utils.aoa_to_sheet(finalData);
-            
+
             // Nastavení širších sloupců pro lepší využití A4
             ws['!cols'] = [
                 {wch: 6},    // Č.
