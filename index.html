@@ -567,7 +567,7 @@
                     <tr>
                         <td>${rowCount}</td>
                         <td>${product.intCode}</td>
-                        <td>${product.name} - ${product.text}</td>
+                        <td>${product.name}${product.text ? ' - ' + product.text : ''}</td>
                         <td>
                             <div class="quantity-container">
                                 <span class="quantity-value">${quantity} ks</span>
@@ -588,7 +588,7 @@
                         </td>
                     </tr>`;
                 table.innerHTML += row;
-            } else {
+            } else if (code) { // Naskenovaná ale neznámá položka
                 let row = `
                     <tr>
                         <td>${rowCount}</td>
@@ -608,7 +608,33 @@
                         </td>
                         <td>
                             <div class="actions-container">
-                                <span>${code ? code + ' !' : ''}</span>
+                                <span>${code} !</span>
+                                <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                            </div>
+                        </td>
+                    </tr>`;
+                table.innerHTML += row;
+            } else { // Ručně přidaná položka
+                let row = `
+                    <tr>
+                        <td>${rowCount}</td>
+                        <td>-</td>
+                        <td>${name}</td>
+                        <td>
+                            <div class="quantity-container">
+                                <span class="quantity-value">${quantity} ks</span>
+                                <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="price-container">
+                                <span class="price-value">-</span>
+                                <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions-container">
+                                <span></span>
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
@@ -778,20 +804,22 @@
 
             const tableData = [];
             document.querySelectorAll("#product-table tr").forEach((row) => {
-                const name = row.querySelector('.name-container .name-value').textContent.trim();
-                const quantity = row.querySelector('.quantity-container .quantity-value').textContent.trim();
-                const price = row.querySelector('.price-container .price-value').textContent.trim();
-                const ean = row.querySelector('.actions-container span').textContent.trim();
-                const cleanEan = ean.replace(' !', '').replace(' ★', '');
+                // Získáme hodnoty přímo z buněk, ne z HTML kontejnerů
+                const name = row.cells[2].textContent.trim();
+                const quantity = row.querySelector('.quantity-value').textContent.trim();
+                const price = row.querySelector('.price-value').textContent.trim();
+                const eanSpan = row.querySelector('.actions-container span');
+                const ean = eanSpan.textContent.trim();
+                const cleanEan = ean.replace(' !', '');
                 const isKnownProduct = database[cleanEan];
 
                 const rowData = [
-                    row.cells[0].textContent.trim(), // Číslo
-                    row.cells[1].textContent.trim(), // Int. kód
-                    name,   // Název bez HTML
-                    quantity, // Množství
-                    price,  // Cena
-                    cleanEan + (!isKnownProduct ? ' !' : '') // EAN s případným vykřičníkem
+                    row.cells[0].textContent.trim(),
+                    row.cells[1].textContent.trim(),
+                    name,
+                    quantity,
+                    price,
+                    ean // Zachováváme původní EAN včetně případného vykřičníku
                 ];
                 tableData.push(rowData);
             });
