@@ -841,83 +841,38 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Upravené nastavení šířky sloupců
+            // Ještě více zúžené sloupce
             ws['!cols'] = [
-                {wch: 4},     // Č. - zúženo
-                {wch: 15},    // Int. kód - zúženo
-                {wch: 40},    // Název - zúženo
-                {wch: 10},    // MJ - zúženo
-                {wch: 12},    // Cena - zúženo
-                {wch: 15}     // EAN - zúženo
+                {wch: 3},     // Č.
+                {wch: 12},    // Int. kód
+                {wch: 35},    // Název
+                {wch: 8},     // MJ
+                {wch: 10},    // Cena
+                {wch: 13}     // EAN
             ];
 
-            // Nastavení výšky řádků
-            ws['!rows'] = Array(finalData.length).fill({ hpt: 20 }); // Snížená výška řádků
+            // Minimální výška řádků
+            ws['!rows'] = Array(finalData.length).fill({ hpt: 16 }); // Ještě menší výška
 
-            // Vylepšené nastavení tisku
+            // Agresivnější nastavení tisku
             ws['!pageSetup'] = {
                 paperSize: 9,           // A4
                 orientation: 'portrait',
                 fitToPage: true,
                 fitToWidth: 1,
                 fitToHeight: 1,
-                scale: 70,             // Zmenšeno na 70%
-                horizontalDpi: 300,
-                verticalDpi: 300
+                scale: 55              // Ještě menší měřítko
             };
 
-            // Přesné nastavení oblasti tisku
-            ws['!printArea'] = [{s: {r: 0, c: 0}, e: {r: finalData.length - 1, c: 5}}];
-
-            // Další nastavení pro lepší tisk
+            // Extra malé okraje
             ws['!margins'] = {
-                left: 0.3,
-                right: 0.3,
-                top: 0.5,
-                bottom: 0.5,
+                left: 0.2,
+                right: 0.2,
+                top: 0.3,
+                bottom: 0.3,
                 header: 0.0,
                 footer: 0.0
             };
-
-            // Nastavení širších sloupců pro lepší využití A4
-            ws['!cols'] = [
-                {wch: 6},    // Č.
-                {wch: 20},   // Int. kód
-                {wch: 55},   // Název
-                {wch: 12},   // MJ
-                {wch: 15},   // Cena
-                {wch: 20}    // EAN
-            ];
-
-            // Přidáme vylepšené nastavení pro tisk na A4
-            ws['!pageSetup'] = {
-                paperSize: 9, // A4
-                orientation: 'portrait',
-                fitToPage: true,
-                fitToHeight: 1, // Přizpůsobit na výšku jedné stránky
-                fitToWidth: 1,  // Přizpůsobit na šířku jedné stránky
-                scale: 85       // Mírně zmenšit pro lepší čitelnost
-            };
-
-            // Přidáme nastavení tisku
-            ws['!print'] = {
-                gridLines: true,    // Zobrazit mřížku
-                horizontalCentered: true,  // Centrovat horizontálně
-                verticalCentered: true    // Centrovat vertikálně
-            };
-
-            // Nastavíme oblast tisku
-            ws['!printArea'] = [
-                {s: {r: 0, c: 0}, e: {r: finalData.length - 1, c: 5}}
-            ];
-
-            // Upravíme sloučení buněk pro hlavičku
-            ws['!merges'] = [
-                {s: {r: 0, c: 0}, e: {r: 0, c: 5}},  // Dodací list
-                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
-                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Dodavatel + adresa na jednom řádku
-                {s: {r: 3, c: 0}, e: {r: 3, c: 5}}   // Prázdný řádek
-            ];
 
             // Přidáme ohraničení a styly
             ws['!rows'] = Array(finalData.length).fill({ hpt: 25 }); // Výška řádků
