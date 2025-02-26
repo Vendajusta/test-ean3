@@ -842,37 +842,50 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Ještě více zúžené sloupce
+            // Optimalizované šířky sloupců pro A4 na výšku
             ws['!cols'] = [
-                {wch: 3},     // Č.
-                {wch: 12},    // Int. kód
-                {wch: 35},    // Název
-                {wch: 8},     // MJ
-                {wch: 10},    // Cena
-                {wch: 13}     // EAN
+                {wch: 4},     // Č.
+                {wch: 10},    // Int. kód - zúženo
+                {wch: 45},    // Název - rozšířeno pro lepší čitelnost
+                {wch: 10},    // MJ
+                {wch: 12},    // Cena
+                {wch: 15}     // EAN
             ];
 
-            // Minimální výška řádků
-            ws['!rows'] = Array(finalData.length).fill({ hpt: 16 }); // Ještě menší výška
+            // Optimalizovaná výška řádků
+            ws['!rows'] = Array(finalData.length).fill({ hpt: 20 }); // 20 bodů výška řádku
 
-            // Agresivnější nastavení tisku
+            // A4 nastavení tisku
             ws['!pageSetup'] = {
                 paperSize: 9,           // A4
-                orientation: 'portrait',
-                fitToPage: true,
-                fitToWidth: 1,
-                fitToHeight: 1,
-                scale: 55              // Ještě menší měřítko
+                orientation: 'portrait', // Na výšku
+                fitToPage: false,       // Vypnuto automatické přizpůsobení
+                scale: 100,            // 100% měřítko
+                paperHeight: 297,      // A4 výška v mm
+                paperWidth: 210,       // A4 šířka v mm
+                firstPageNumber: 1,    // Začít číslovat od 1
+                useFirstPageNumber: true,
+                blackAndWhite: false,
+                horizontalDpi: 300,    // Vysoké DPI pro lepší čitelnost
+                verticalDpi: 300
             };
 
-            // Extra malé okraje
+            // Minimální okraje pro tiskárnu
             ws['!margins'] = {
-                left: 0.2,
-                right: 0.2,
-                top: 0.3,
-                bottom: 0.3,
-                header: 0.0,
-                footer: 0.0
+                left: 0.7,    // Standardní okraje pro A4
+                right: 0.7,
+                top: 0.75,
+                bottom: 0.75,
+                header: 0.3,
+                footer: 0.3
+            };
+
+            // Nastavení tisku
+            ws['!print'] = {
+                gridLines: true,           // Zobrazit mřížku
+                gridLinesSet: true,
+                horizontalCentered: true,  // Centrovat horizontálně
+                verticalCentered: false    // Necentralovat vertikálně
             };
 
             // Přidáme ohraničení a styly
