@@ -799,7 +799,8 @@
                 ['Dodací list/daňový doklad' , '', '', '', '', ''],               
                 ['Datum zdanitelného plnění:' , '', '', '', '', ''],
                 ['Odběratel:' , '', '', '', '', ''],
-                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo, Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', ''],
+                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', '', '', '', '', ''],
+                ['Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', ''],
                 ['', '', '', '', '', ''],
                 ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']
             ];
@@ -900,6 +901,16 @@
                     }
                 }
             }
+
+            // Upravíme sloučení buněk pro hlavičku aby počítalo s novým řádkem
+            ws['!merges'] = [
+                {s: {r: 0, c: 0}, e: {r: 0, c: 5}},  // Dodací list
+                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
+                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Odběratel
+                {s: {r: 3, c: 0}, e: {r: 3, c: 5}},  // Dodavatel - první řádek
+                {s: {r: 4, c: 0}, e: {r: 4, c: 5}},  // Dodavatel - druhý řádek
+                {s: {r: 5, c: 0}, e: {r: 5, c: 5}}   // Prázdný řádek
+            ];
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
