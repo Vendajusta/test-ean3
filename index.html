@@ -524,7 +524,6 @@
                 table.innerHTML = '';
 
                 tableData.forEach(item => {
-                    // Odstranit případnou existující značku před kontrolou
                     const cleanEan = item.ean.replace(' !', '').replace(' ★', ''); // Podporuje oba symboly pro zpětnou kompatibilitu
                     const isKnownProduct = database[cleanEan];
                     
@@ -532,12 +531,7 @@
                         <tr>
                             <td>${item.number}</td>
                             <td>${item.intCode}</td>
-                            <td>
-                                <div class="name-container">
-                                    <span class="name-value">${item.name}</span>
-                                    <button class="edit-name-btn" onclick="editName(this)">✎</button>
-                                </div>
-                            </td>
+                            <td>${item.name}</td>
                             <td>
                                 <div class="quantity-container">
                                     <span class="quantity-value">${item.quantity}</span>
@@ -552,7 +546,7 @@
                             </td>
                             <td>
                                 <div class="actions-container">
-                                    <span>${cleanEan}${!isKnownProduct ? ' !' : ''}</span>
+                                    <span>${cleanEan}${!isKnownProduct && cleanEan ? ' !' : ''}</span>
                                     <button class="delete-btn" onclick="deleteRow(this)">×</button>
                                 </div>
                             </td>
@@ -614,7 +608,7 @@
                         </td>
                         <td>
                             <div class="actions-container">
-                                <span>${code} !</span>
+                                <span>${code ? code + ' !' : ''}</span>
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
@@ -886,14 +880,7 @@
                 const quantity = await customPrompt(`Název: ${name}\nCena: ${price}\n\nZadejte počet kusů:`, '1');
                 
                 if (quantity) {
-                    const randomEAN = 'M' + Date.now(); // Generujeme unikátní kód pro manuální položku
-                    database[randomEAN] = {
-                        intCode: '-',
-                        name: name,
-                        text: '',
-                        price: price || '-'
-                    };
-                    addProduct(randomEAN, name, quantity);
+                    addProduct('', name, quantity); // Prázdný kód pro ruční položku
                 }
             }
         }
