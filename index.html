@@ -796,19 +796,20 @@
 
             const tableData = [];
             document.querySelectorAll("#product-table tr").forEach((row) => {
-                const nameCell = row.querySelector('.name-container .name-value');
-                const qtyCell = row.querySelector('.quantity-container .quantity-value');
-                const priceCell = row.querySelector('.price-container .price-value');
+                // Získáme hodnotu EAN a zkontrolujeme, jestli je v databázi
                 const eanCell = row.querySelector('.actions-container span');
+                const eanText = eanCell.textContent.trim();
+                const cleanEan = eanText.replace(' ★', '');
+                const isKnownProduct = database[cleanEan];
 
-                // Extrahujeme pouze čistý text bez HTML
                 const rowData = [
                     row.cells[0].textContent.trim(),
                     row.cells[1].textContent.trim(),
-                    nameCell ? nameCell.textContent.trim() : '',
-                    qtyCell ? qtyCell.textContent.trim() : '',
-                    priceCell ? priceCell.textContent.trim() : '',
-                    eanCell ? eanCell.textContent.trim() : ''
+                    row.querySelector('.name-container .name-value').textContent.trim(),
+                    row.querySelector('.quantity-container .quantity-value').textContent.trim(),
+                    row.querySelector('.price-container .price-value').textContent.trim(),
+                    // Přidáme hvězdičku, pokud produkt není v databázi
+                    cleanEan + (!isKnownProduct ? ' ★' : '')
                 ];
                 tableData.push(rowData);
             });
