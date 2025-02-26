@@ -396,10 +396,10 @@
                                 let quantity = await customPrompt(promptMessage, '1');
                                 if (quantity) addProduct(decodedText, product.name, quantity);
                             } else {
-                                let name = await customPrompt('Neznámý produkt!\n\nZadejte název:', 'Neznámý produkt');
+                                let name = await customPrompt('Neznámý produkt!\n\nZadej název:', 'Neznámý produkt');
                                 if (name) {
-                                    let price = await customPrompt('Zadejte cenu:', '');
-                                    let quantity = await customPrompt(`Název: ${name}\nCena: ${price}\nEAN: ${decodedText}\n\nZadejte počet kusů:`, '1');
+                                    let price = await customPrompt('Zadej cenu:', '');
+                                    let quantity = await customPrompt(`Název: ${name}\nCena: ${price}\nEAN: ${decodedText}\n\nZadej počet kusů:`, '1');
                                     
                                     if (quantity) {
                                         database[decodedText] = {
