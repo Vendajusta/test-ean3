@@ -841,6 +841,44 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
+            // Upravené nastavení šířky sloupců
+            ws['!cols'] = [
+                {wch: 4},     // Č. - zúženo
+                {wch: 15},    // Int. kód - zúženo
+                {wch: 40},    // Název - zúženo
+                {wch: 10},    // MJ - zúženo
+                {wch: 12},    // Cena - zúženo
+                {wch: 15}     // EAN - zúženo
+            ];
+
+            // Nastavení výšky řádků
+            ws['!rows'] = Array(finalData.length).fill({ hpt: 20 }); // Snížená výška řádků
+
+            // Vylepšené nastavení tisku
+            ws['!pageSetup'] = {
+                paperSize: 9,           // A4
+                orientation: 'portrait',
+                fitToPage: true,
+                fitToWidth: 1,
+                fitToHeight: 1,
+                scale: 70,             // Zmenšeno na 70%
+                horizontalDpi: 300,
+                verticalDpi: 300
+            };
+
+            // Přesné nastavení oblasti tisku
+            ws['!printArea'] = [{s: {r: 0, c: 0}, e: {r: finalData.length - 1, c: 5}}];
+
+            // Další nastavení pro lepší tisk
+            ws['!margins'] = {
+                left: 0.3,
+                right: 0.3,
+                top: 0.5,
+                bottom: 0.5,
+                header: 0.0,
+                footer: 0.0
+            };
+
             // Nastavení širších sloupců pro lepší využití A4
             ws['!cols'] = [
                 {wch: 6},    // Č.
