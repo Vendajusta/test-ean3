@@ -196,7 +196,7 @@
         }
         .custom-prompt-buttons {
             display: flex;
-            justify-content: flex-end;
+            justify-content: flex-start; /* Změněno z flex-end na flex-start */
             gap: 10px;
             margin-top: 20px;
         }
@@ -658,14 +658,10 @@
                     : `<button class="custom-prompt-button secondary" data-action="cancel">Ne</button>
                        <button class="custom-prompt-button primary" data-action="ok">Ano</button>`;
 
-                const input = options.showInput 
-                    ? `<input type="text" class="custom-prompt-input" value="${options.defaultValue || ''}">`
-                    : '';
-                
                 overlay.innerHTML = `
                     <div class="custom-prompt-box">
                         <div class="custom-prompt-message">${message}</div>
-                        ${input}
+                        ${options.showInput ? `<input type="text" class="custom-prompt-input" value="${options.defaultValue || ''}">` : ''}
                         <div class="custom-prompt-buttons">
                             ${buttons}
                         </div>
