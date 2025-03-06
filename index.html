@@ -232,7 +232,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybraru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -860,11 +860,16 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Nastavení zarovnání doprava pro sloupce 4, 5 a 6
+            // Nastavení zarovnání doprava pro sloupce 4, 5 a 6 a zalamování pro sloupec 3
             Object.keys(ws).forEach(cell => {
                 if (cell.startsWith('D') || cell.startsWith('E') || cell.startsWith('F')) {
                     if (!ws[cell].s) ws[cell].s = {};
                     ws[cell].s.alignment = { horizontal: "right" };
+                }
+                // Nastavení zalamování textu pro sloupec "Položka" (C)
+                if (cell.startsWith('C')) {
+                    if (!ws[cell].s) ws[cell].s = {};
+                    ws[cell].s.alignment = { wrapText: true };
                 }
             });
 
