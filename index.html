@@ -831,21 +831,21 @@
             const totalVat = document.getElementById('total-vat').textContent;
             const totalWithVat = document.getElementById('total-with-vat').textContent;
             
-            tableData.push(['', '', '', 'Suma bez DPH:','', totalPrice]);
+            tableData.push(['', '', '', 'Bez DPH:','', totalPrice]);
             tableData.push(['', '', '', 'DPH 21 %:','', totalVat]);
-            tableData.push(['', '', '',' Celkem s DPH:','', totalWithVat]);
+            tableData.push(['', '', '',' Celkem:','', totalWithVat]);
 
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Upravené šířky sloupců pro těsnější rozložení
+            // Upravené šířky sloupců - širší sloupec pro položky
             ws['!cols'] = [
                 {wch: 3},     // Č. - minimální
-                {wch: 8},     // Int. kód - zúženo
-                {wch: 30},    // Název - zúženo
-                {wch: 8},     // MJ - zúženo
-                {wch: 10},    // Cena
-                {wch: 12}     // EAN - zúženo
+                {wch: 7},     // Int. kód - více zúženo
+                {wch: 40},    // Název/Položky - rozšířeno
+                {wch: 7},     // MJ - více zúženo
+                {wch: 8},     // Cena - zúženo
+                {wch: 10}     // EAN - více zúženo
             ];
 
             // Minimální výška řádků
