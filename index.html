@@ -249,7 +249,7 @@
                     <td colspan="7" class="total-cell">
                         součet: <span id="total-price">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
                         DPH: <span id="total-vat">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
-                        celkem: <span id="total-with-vat">0,00 Kč</span>
+                        Celkem: <span id="total-with-vat">0,00 Kč</span>
                     </td>
                 </tr>
             </tfoot>
@@ -876,6 +876,26 @@
                 {wch: 10},    // Cena
                 {wch: 13}     // EAN
             ];
+
+            // Zarovnání textu pro všechny buňky
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for(let R = range.s.r; R <= range.e.r; R++) {
+                for(let C = range.s.c; C <= range.e.c; C++) {
+                    const cell_ref = XLSX.utils.encode_cell({r: R, c: C});
+                    if(!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
+                    ws[cell_ref].s = {
+                        alignment: { 
+                            vertical: 'center',
+                            wrapText: true
+                        }
+                    };
+                    
+                    // Zarovnání doprava pro množství, cenu a EAN
+                    if (C >= 3) { // Sloupce 4,5,6 (indexy 3,4,5)
+                        ws[cell_ref].s.alignment.horizontal = 'right';
+                    }
+                }
+            }
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
