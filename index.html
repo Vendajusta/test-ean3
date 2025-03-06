@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybr kameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -838,50 +838,37 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Optimalizované šířky sloupců pro A4 na výšku
+            // Upravené šířky sloupců pro těsnější rozložení
             ws['!cols'] = [
-                {wch: 4},     // Č.
-                {wch: 10},    // Int. kód - zúženo
-                {wch: 45},    // Název - rozšířeno pro lepší čitelnost
-                {wch: 10},    // MJ
-                {wch: 12},    // Cena
-                {wch: 15}     // EAN
+                {wch: 3},     // Č. - minimální
+                {wch: 8},     // Int. kód - zúženo
+                {wch: 30},    // Název - zúženo
+                {wch: 8},     // MJ - zúženo
+                {wch: 10},    // Cena
+                {wch: 12}     // EAN - zúženo
             ];
 
-            // Optimalizovaná výška řádků
-            ws['!rows'] = Array(finalData.length).fill({ hpt: 20 }); // 20 bodů výška řádku
+            // Minimální výška řádků
+            ws['!rows'] = Array(finalData.length).fill({ hpt: 15 }); // Snížená výška na 15
 
-            // A4 nastavení tisku
+            // A4 nastavení s menšími okraji
             ws['!pageSetup'] = {
                 paperSize: 9,           // A4
-                orientation: 'portrait', // Na výšku
-                fitToPage: false,       // Vypnuto automatické přizpůsobení
-                scale: 100,            // 100% měřítko
-                paperHeight: 297,      // A4 výška v mm
-                paperWidth: 210,       // A4 šířka v mm
-                firstPageNumber: 1,    // Začít číslovat od 1
-                useFirstPageNumber: true,
-                blackAndWhite: false,
-                horizontalDpi: 300,    // Vysoké DPI pro lepší čitelnost
-                verticalDpi: 300
+                orientation: 'portrait',
+                fitToPage: true,       // Zapnuto automatické přizpůsobení
+                fitToHeight: 1,        // Vše na jednu stránku na výšku
+                fitToWidth: 1,         // Přizpůsobit šířce
+                scale: 90,            // Mírně zmenšeno
             };
 
-            // Minimální okraje pro tiskárnu
+            // Minimální okraje
             ws['!margins'] = {
-                left: 0.7,    // Standardní okraje pro A4
-                right: 0.7,
-                top: 0.75,
-                bottom: 0.75,
-                header: 0.3,
-                footer: 0.3
-            };
-
-            // Nastavení tisku
-            ws['!print'] = {
-                gridLines: true,           // Zobrazit mřížku
-                gridLinesSet: true,
-                horizontalCentered: true,  // Centrovat horizontálně
-                verticalCentered: false    // Necentralovat vertikálně
+                left: 0.5,     // Zmenšené okraje
+                right: 0.5,
+                top: 0.5,
+                bottom: 0.5,
+                header: 0.0,
+                footer: 0.0
             };
 
             // Přidáme ohraničení a styly
