@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vykameru</button>
+        <button onclick="listCameras()">Vybrat kamasdferu</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -848,17 +848,17 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Jediné nastavení šířek sloupců - bez duplicit!
+            // JEDINÉ správné nastavení šířek sloupců!
             ws['!cols'] = [
                 {wch: 3},     // Č.
                 {wch: 10},    // Int. kód 
-                {wch: 43},    // Název/Položky - PŘESNĚ 43 jak bylo požadováno
+                {wch: 43},    // Název/Položky - PŘESNĚ 43 jak má být
                 {wch: 8},     // Množství
                 {wch: 10},    // Cena
                 {wch: 13}     // EAN
             ];
 
-            // Jediné nastavení sloučení buněk - první řádek spojen přes první 3 buňky!
+            // JEDINÉ správné nastavení sloučení buněk!
             ws['!merges'] = [
                 {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list přes první 3 buňky
                 {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
@@ -867,114 +867,6 @@
                 {s: {r: 4, c: 0}, e: {r: 4, c: 5}},  // Adresa
                 {s: {r: 5, c: 0}, e: {r: 5, c: 5}}   // Prázdný řádek
             ];
-
-            // Nastavení přesných šířek sloupců - KONEČNĚ správně!
-            ws['!cols'] = [
-                {wch: 3},     // Č.
-                {wch: 10},    // Int. kód 
-                {wch: 43},    // Název/Položky - PŘESNĚ 43!
-                {wch: 8},     // Množství
-                {wch: 10},    // Cena
-                {wch: 13}     // EAN
-            ];
-
-            // Sloučení buněk - první řádek KONEČNĚ správně!
-            ws['!merges'] = [
-                {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list sloučen přes první 3 buňky
-                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
-                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Odběratel
-                {s: {r: 3, c: 0}, e: {r: 3, c: 5}},  // Dodavatel
-                {s: {r: 4, c: 0}, e: {r: 4, c: 5}},  // Adresa
-                {s: {r: 5, c: 0}, e: {r: 5, c: 5}}   // Prázdný řádek
-            ];
-
-            // Základní nastavení - jen to nejdůležitější
-            ws['!cols'] = [
-                {wch: 4},     // Č. - úzký sloupec
-                {wch: 15},    // Int. kód - širší pro celý kód
-                {wch: 50},    // Název/Položky - extra široký pro dlouhé názvy
-                {wch: 10},    // Množství
-                {wch: 12},    // Cena
-                {wch: 15}     // EAN - širší pro celý kód
-            ];
-
-            // Jediné nastavení okrajů - extrémně malé
-            ws['!margins'] = {
-                left: 0.2,
-                right: 0.2,    // Stejný jako levý
-                top: 0.3,
-                bottom: 0.3,
-                header: 0,
-                footer: 0
-            };
-
-            // Pouze nutné nastavení stránky
-            ws['!pageSetup'] = {
-                paperSize: 9,        // A4
-                orientation: 'portrait'
-            };
-
-            // Přidáme ohraničení a styly
-            ws['!rows'] = Array(finalData.length).fill({ hpt: 25 }); // Výška řádků
-            
-            // Nastavíme ohraničení pro celou tabulku
-            const range = XLSX.utils.decode_range(ws['!ref']);
-            for(let R = range.s.r; R <= range.e.r; R++) {
-                for(let C = range.s.c; C <= range.e.c; C++) {
-                    const cell_ref = XLSX.utils.encode_cell({r: R, c: C});
-                    if(!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
-                    ws[cell_ref].s = {
-                        border: {
-                            top: { style: 'thin' },
-                            bottom: { style: 'thin' },
-                            left: { style: 'thin' },
-                            right: { style: 'thin' }
-                        },
-                        alignment: { 
-                            vertical: 'center',
-                            wrapText: true  // Povolení zalamování textu
-                        }
-                    };
-
-                    // Zarovnání čísel doprava
-                    if (C === 3 || C === 4) { // sloupce s množstvím a cenou
-                        ws[cell_ref].s.alignment.horizontal = 'right';
-                    }
-                }
-            }
-
-            // Extra minimální okraje
-            ws['!margins'] = {
-                left: 0.2,
-                right: 0.2,
-                top: 0.3,
-                bottom: 0.3,
-                header: 0,
-                footer: 0
-            };
-
-            // Upravíme sloučení buněk pro hlavičku aby počítalo s novým řádkem
-            ws['!merges'] = [
-                // První řádek už není sloučený
-                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
-                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Odběratel
-                {s: {r: 3, c: 0}, e: {r: 3, c: 5}},  // Dodavatel - první řádek
-                {s: {r: 4, c: 0}, e: {r: 4, c: 5}},  // Dodavatel - druhý řádek
-                {s: {r: 5, c: 0}, e: {r: 5, c: 5}}   // Prázdný řádek
-            ];
-
-            // Nastavení zarovnání pro první řádek
-            const firstRowRange = XLSX.utils.decode_range(ws['!ref']).s.r;
-            const cell1 = XLSX.utils.encode_cell({r: firstRowRange, c: 0});
-            const cell6 = XLSX.utils.encode_cell({r: firstRowRange, c: 5});
-            
-            // Zarovnání doleva pro "Dodací list/daňový doklad"
-            if(!ws[cell1]) ws[cell1] = {};
-            ws[cell1].s = { alignment: { horizontal: 'left' } };
-            
-            // Zarovnání doprava pro číslo dokumentu
-            if(!ws[cell6]) ws[cell6] = {};
-            ws[cell6].s = { alignment: { horizontal: 'right' } };
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
