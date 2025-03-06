@@ -791,9 +791,10 @@
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
             
-            // Vytvoření čísla dokumentu z data a času
+            // Vytvoření čísla dokumentu včetně roku a prefixu
             const now = new Date();
-            const docNumber = now.toLocaleString('cs-CZ', {
+            const year = now.getFullYear().toString().slice(-2); // Získá poslední 2 číslice roku
+            const docNumber = year + now.toLocaleString('cs-CZ', {
                 day: '2-digit',
                 month: '2-digit',
                 hour: '2-digit',
@@ -801,8 +802,7 @@
             }).replace(/[. :]/g, '');
             
             const headerRows = [
-                // První řádek rozdělen - číslo bude samostatně v poslední buňce
-                ['Dodací list/daňový doklad', '', '', '', '', docNumber],
+                ['Dodací list/daňový doklad', '', '', '', '', 'č. ' + docNumber], // Přidáno 'č. ' před číslo
                 ['Datum zdanitelného plnění:' , '', '', '', '', ''],
                 ['Odběratel:' , '', '', '', '', ''],
                 ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', '', '', '', '', ''],
