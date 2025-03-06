@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vybrat eru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -838,70 +838,30 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Upravené šířky sloupců - lepší rozložení
+            // Základní nastavení - jen to nejdůležitější
             ws['!cols'] = [
                 {wch: 3},     // Č.
-                {wch: 7},     // Int. kód
-                {wch: 40},    // Název/Položky
-                {wch: 10},    // Množství - zvětšeno
-                {wch: 12},    // Jedn.cena - zvětšeno
-                {wch: 13}     // EAN - zvětšeno
+                {wch: 6},     // Int. kód
+                {wch: 35},    // Název/Položky
+                {wch: 10},    // Množství
+                {wch: 12},    // Cena
+                {wch: 13}     // EAN
             ];
 
-            // Minimální pravý okraj
+            // Jediné nastavení okrajů - extrémně malé
             ws['!margins'] = {
-                left: 0.3,
-                right: 0.1,    // Extra malý pravý okraj
-                top: 0.5,
-                bottom: 0.5,
-                header: 0.0,
-                footer: 0.0
+                left: 0.2,
+                right: 0.1,    // Nejmenší možný pravý okraj
+                top: 0.3,
+                bottom: 0.3,
+                header: 0,
+                footer: 0
             };
 
-            // Menší výška řádků ale ne moc
-            ws['!rows'] = Array(finalData.length).fill({ hpt: 16 });
-
-            // Ještě užší sloupce a větší prostor pro název
-            ws['!cols'] = [
-                {wch: 3},     // Č.
-                {wch: 6},     // Int. kód - ještě užší
-                {wch: 45},    // Název/Položky - ještě širší
-                {wch: 6},     // MJ - ještě užší
-                {wch: 7},     // Cena - ještě užší
-                {wch: 9}      // EAN - ještě užší
-            ];
-
-            // Extra malé okraje - hlavně vpravo
-            ws['!margins'] = {
-                left: 0.3,      // Menší levý okraj
-                right: 0.2,     // Minimální pravý okraj
-                top: 0.5,
-                bottom: 0.5,
-                header: 0.0,
-                footer: 0.0
-            };
-
-            // Menší výška řádků
-            ws['!rows'] = Array(finalData.length).fill({ hpt: 14 }); // Ještě menší výška
-
-            // A4 nastavení s menšími okraji
+            // Pouze nutné nastavení stránky
             ws['!pageSetup'] = {
-                paperSize: 9,           // A4
-                orientation: 'portrait',
-                fitToPage: true,       // Zapnuto automatické přizpůsobení
-                fitToHeight: 1,        // Vše na jednu stránku na výšku
-                fitToWidth: 1,         // Přizpůsobit šířce
-                scale: 90,            // Mírně zmenšeno
-            };
-
-            // Minimální okraje
-            ws['!margins'] = {
-                left: 0.5,     // Zmenšené okraje
-                right: 0.5,
-                top: 0.5,
-                bottom: 0.5,
-                header: 0.0,
-                footer: 0.0
+                paperSize: 9,        // A4
+                orientation: 'portrait'
             };
 
             // Přidáme ohraničení a styly
