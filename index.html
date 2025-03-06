@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vyt kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -848,11 +848,11 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Zúžené sloupce aby se vše vešlo na jednu stránku
+            // Upravené šířky sloupců
             ws['!cols'] = [
                 {wch: 3},     // Č.
                 {wch: 10},    // Int. kód 
-                {wch: 25},    // Název/Položky - výrazně zúženo
+                {wch: 43},    // Název/Položky - přesně 43 znaků
                 {wch: 8},     // Množství
                 {wch: 10},    // Cena
                 {wch: 13}     // EAN
@@ -898,6 +898,16 @@
                 header: 0,
                 footer: 0
             };
+
+            // Nastavení sloučení buněk - první řádek má sloučené první tři buňky
+            ws['!merges'] = [
+                {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list/daňový doklad (sloučeno první tři buňky)
+                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
+                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Odběratel
+                {s: {r: 3, c: 0}, e: {r: 3, c: 5}},  // Dodavatel - první řádek
+                {s: {r: 4, c: 0}, e: {r: 4, c: 5}},  // Dodavatel - druhý řádek
+                {s: {r: 5, c: 0}, e: {r: 5, c: 5}}   // Prázdný řádek
+            ];
 
             // Upravíme sloučení buněk pro hlavičku aby počítalo s novým řádkem
             ws['!merges'] = [
