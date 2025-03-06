@@ -850,18 +850,18 @@
 
             // Základní nastavení - jen to nejdůležitější
             ws['!cols'] = [
-                {wch: 3},     // Č.
-                {wch: 6},     // Int. kód
-                {wch: 35},    // Název/Položky
-                {wch: 10},    // Množství
+                {wch: 40},    // První sloupec extra široký pro "Dodací list/daňový doklad"
+                {wch: 8},     // Int. kód
+                {wch: 45},    // Název/Položky
+                {wch: 12},    // Množství
                 {wch: 12},    // Cena
-                {wch: 13}     // EAN
+                {wch: 15}     // EAN
             ];
 
             // Jediné nastavení okrajů - extrémně malé
             ws['!margins'] = {
                 left: 0.2,
-                right: 0.1,    // Nejmenší možný pravý okraj
+                right: 0.2,    // Stejný jako levý
                 top: 0.3,
                 bottom: 0.3,
                 header: 0,
