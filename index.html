@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat jnmghkameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -858,6 +858,30 @@
                 footer: 0
             };
 
+            // DŮLEŽITÉ: Nejdřív nastavíme všem buňkám ohraničení a základní zarovnání
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for(let R = range.s.r; R <= range.e.r; R++) {
+                for(let C = range.s.c; C <= range.e.c; C++) {
+                    const cell_ref = XLSX.utils.encode_cell({r: R, c: C});
+                    if(!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
+                    
+                    // Základní styl pro všechny buňky
+                    ws[cell_ref].s = {
+                        border: {
+                            top: {style: 'thin'},
+                            bottom: {style: 'thin'},
+                            left: {style: 'thin'},
+                            right: {style: 'thin'}
+                        },
+                        alignment: {
+                            vertical: 'center',
+                            horizontal: C >= 3 ? 'right' : 'left', // 4.,5.,6. sloupec doprava
+                            wrapText: true
+                        }
+                    };
+                }
+            }
+
             // JEDINÉ správné nastavení sloučení buněk!
             ws['!merges'] = [
                 {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list přes první 3 buňky
@@ -876,26 +900,6 @@
                 {wch: 10},    // Cena
                 {wch: 13}     // EAN
             ];
-
-            // Zarovnání textu pro všechny buňky
-            const range = XLSX.utils.decode_range(ws['!ref']);
-            for(let R = range.s.r; R <= range.e.r; R++) {
-                for(let C = range.s.c; C <= range.e.c; C++) {
-                    const cell_ref = XLSX.utils.encode_cell({r: R, c: C});
-                    if(!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
-                    ws[cell_ref].s = {
-                        alignment: { 
-                            vertical: 'center',
-                            wrapText: true
-                        }
-                    };
-                    
-                    // Zarovnání doprava pro množství, cenu a EAN
-                    if (C >= 3) { // Sloupce 4,5,6 (indexy 3,4,5)
-                        ws[cell_ref].s.alignment.horizontal = 'right';
-                    }
-                }
-            }
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
