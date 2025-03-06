@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrkameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -249,7 +249,7 @@
                     <td colspan="7" class="total-cell">
                         součet: <span id="total-price">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
                         DPH: <span id="total-vat">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
-                        Celkem: <span id="total-with-vat">0,00 Kč</span>
+                        celkem: <span id="total-with-vat">0,00 Kč</span>
                     </td>
                 </tr>
             </tfoot>
@@ -848,39 +848,34 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
+            // Jediné nastavení okrajů - absolutní minimum
+            ws['!margins'] = {
+                left: 0.1,
+                right: 0.1,
+                top: 0.2,
+                bottom: 0.2,
+                header: 0,
+                footer: 0
+            };
+
+            // JEDINÉ správné nastavení sloučení buněk!
+            ws['!merges'] = [
+                {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list přes první 3 buňky
+                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
+                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Odběratel
+                {s: {r: 3, c: 0}, e: {r: 3, c: 5}},  // Dodavatel
+                {s: {r: 4, c: 0}, e: {r: 4, c: 5}},  // Adresa
+                {s: {r: 5, c: 0}, e: {r: 5, c: 5}}   // Prázdný řádek
+            ];
+
             ws['!cols'] = [
                 {wch: 3},     // Č.
                 {wch: 10},    // Int. kód 
-                {wch: 43},    // Název/Položky - PŘESNĚ 43
-                {wch: 8},     // Množství
-                {wch: 10},    // Cena
-                {wch: 13}     // EAN
+                {wch: 43},    // Název/Položky - PŘESNĚ 43 jak má být
+                {wch: 8, alignment: {horizontal: 'right'}},     // Množství
+                {wch: 10, alignment: {horizontal: 'right'}},    // Cena
+                {wch: 13, alignment: {horizontal: 'right'}}     // EAN
             ];
-
-            ws['!merges'] = [
-                {s: {r: 0, c: 0}, e: {r: 0, c: 2}},
-                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},
-                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},
-                {s: {r: 3, c: 0}, e: {r: 3, c: 5}},
-                {s: {r: 4, c: 0}, e: {r: 4, c: 5}},
-                {s: {r: 5, c: 0}, e: {r: 5, c: 5}}
-            ];
-
-            // Jeden průchod, jednoduché nastavení!
-            const range = XLSX.utils.decode_range(ws['!ref']);
-            for(let R = range.s.r; R <= range.e.r; R++) {
-                for(let C = range.s.c; C <= range.e.c; C++) {
-                    const cell = ws[XLSX.utils.encode_cell({r: R, c: C})];
-                    if(!cell) continue;
-                    
-                    cell.s = {
-                        alignment: {
-                            vertical: 'center',
-                            horizontal: C >= 3 ? 'right' : 'left' // Sloupce 4,5,6 doprava
-                        }
-                    };
-                }
-            }
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
