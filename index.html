@@ -46,6 +46,13 @@
             padding: 12px 8px; /* Větší padding buněk */
             text-align: left;
         }
+        
+        /* Přidám nové pravidlo pro třetí sloupec (Položky) */
+        td:nth-child(3) {
+            word-wrap: break-word;
+            max-width: 300px;
+            white-space: normal;
+        }
         th {
             border-bottom: 2px solid #000;
             font-size: 22px; /* Ještě větší text v hlavičce */
@@ -220,7 +227,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">ameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
