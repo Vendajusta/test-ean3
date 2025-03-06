@@ -838,6 +838,29 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
+            // Upravené šířky sloupců - lepší rozložení
+            ws['!cols'] = [
+                {wch: 3},     // Č.
+                {wch: 7},     // Int. kód
+                {wch: 40},    // Název/Položky
+                {wch: 10},    // Množství - zvětšeno
+                {wch: 12},    // Jedn.cena - zvětšeno
+                {wch: 13}     // EAN - zvětšeno
+            ];
+
+            // Minimální pravý okraj
+            ws['!margins'] = {
+                left: 0.3,
+                right: 0.1,    // Extra malý pravý okraj
+                top: 0.5,
+                bottom: 0.5,
+                header: 0.0,
+                footer: 0.0
+            };
+
+            // Menší výška řádků ale ne moc
+            ws['!rows'] = Array(finalData.length).fill({ hpt: 16 });
+
             // Ještě užší sloupce a větší prostor pro název
             ws['!cols'] = [
                 {wch: 3},     // Č.
