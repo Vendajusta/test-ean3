@@ -850,12 +850,12 @@
 
             // Základní nastavení - jen to nejdůležitější
             ws['!cols'] = [
-                {wch: 40},    // První sloupec extra široký pro "Dodací list/daňový doklad"
-                {wch: 8},     // Int. kód
-                {wch: 45},    // Název/Položky
-                {wch: 12},    // Množství
+                {wch: 4},     // Č. - úzký sloupec
+                {wch: 15},    // Int. kód - širší pro celý kód
+                {wch: 50},    // Název/Položky - extra široký pro dlouhé názvy
+                {wch: 10},    // Množství
                 {wch: 12},    // Cena
-                {wch: 15}     // EAN
+                {wch: 15}     // EAN - širší pro celý kód
             ];
 
             // Jediné nastavení okrajů - extrémně malé
@@ -890,16 +890,28 @@
                             left: { style: 'thin' },
                             right: { style: 'thin' }
                         },
-                        alignment: { vertical: 'center' } // Vertikální zarovnání na střed
+                        alignment: { 
+                            vertical: 'center',
+                            wrapText: true  // Povolení zalamování textu
+                        }
                     };
-                    
-                    // Přidáme silnější ohraničení pro hlavičku
-                    if (R === 5) {
-                        ws[cell_ref].s.border.bottom = { style: 'medium' };
-                        ws[cell_ref].s.font = { bold: true };
+
+                    // Zarovnání čísel doprava
+                    if (C === 3 || C === 4) { // sloupce s množstvím a cenou
+                        ws[cell_ref].s.alignment.horizontal = 'right';
                     }
                 }
             }
+
+            // Extra minimální okraje
+            ws['!margins'] = {
+                left: 0.2,
+                right: 0.2,
+                top: 0.3,
+                bottom: 0.3,
+                header: 0,
+                footer: 0
+            };
 
             // Upravíme sloučení buněk pro hlavičku aby počítalo s novým řádkem
             ws['!merges'] = [
