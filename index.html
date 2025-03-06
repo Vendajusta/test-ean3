@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vybratameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -875,10 +875,16 @@
                         },
                         alignment: {
                             vertical: 'center',
-                            horizontal: C >= 3 ? 'right' : 'left', // 4.,5.,6. sloupec doprava
                             wrapText: true
                         }
                     };
+
+                    // POUZE poslední 3 sloupce zarovnáme doprava
+                    if (C >= 3) { // Sloupce 4,5,6 (množství, cena, EAN)
+                        ws[cell_ref].s.alignment.horizontal = 'right';
+                    } else {
+                        ws[cell_ref].s.alignment.horizontal = 'left'; // Ostatní doleva
+                    }
                 }
             }
 
