@@ -848,6 +848,26 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
+            // Nastavení přesných šířek sloupců
+            ws['!cols'] = [
+                {wch: 3},     // Č.
+                {wch: 10},    // Int. kód 
+                {wch: 43},    // Název/Položky - přesně 43 jak požadováno
+                {wch: 8},     // Množství
+                {wch: 10},    // Cena
+                {wch: 13}     // EAN
+            ];
+
+            // Sloučení buněk v hlavičce - první řádek sloučen správně
+            ws['!merges'] = [
+                {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list sloučen přes první 3 buňky
+                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
+                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Odběratel
+                {s: {r: 3, c: 0}, e: {r: 3, c: 5}},  // Dodavatel
+                {s: {r: 4, c: 0}, e: {r: 4, c: 5}},  // Adresa
+                {s: {r: 5, c: 0}, e: {r: 5, c: 5}}   // Prázdný řádek
+            ];
+
             // Základní nastavení - jen to nejdůležitější
             ws['!cols'] = [
                 {wch: 4},     // Č. - úzký sloupec
