@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat eru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -791,8 +791,17 @@
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
             
+            // Vytvoření čísla dokumentu z data a času
+            const now = new Date();
+            const docNumber = now.toLocaleString('cs-CZ', {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).replace(/[. :]/g, '');
+            
             const headerRows = [
-                ['Dodací list/daňový doklad' , '', '', '', '', ''],               
+                ['Dodací list/daňový doklad' , '', '', '', '', docNumber],  // Přidáno číslo vpravo     
                 ['Datum zdanitelného plnění:' , '', '', '', '', ''],
                 ['Odběratel:' , '', '', '', '', ''],
                 ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', '', '', '', '', ''],
