@@ -848,56 +848,42 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Základní nastavení - jen to nejdůležitější
+            // Zúžené sloupce aby se vše vešlo na jednu stránku
             ws['!cols'] = [
-                {wch: 4},     // Č. - úzký sloupec
-                {wch: 15},    // Int. kód - širší pro celý kód
-                {wch: 50},    // Název/Položky - extra široký pro dlouhé názvy
-                {wch: 10},    // Množství
-                {wch: 12},    // Cena
-                {wch: 15}     // EAN - širší pro celý kód
+                {wch: 3},     // Č.
+                {wch: 10},    // Int. kód 
+                {wch: 25},    // Název/Položky - výrazně zúženo
+                {wch: 8},     // Množství
+                {wch: 10},    // Cena
+                {wch: 13}     // EAN
             ];
 
-            // Jediné nastavení okrajů - extrémně malé
+            // Extra malé okraje
             ws['!margins'] = {
-                left: 0.2,
-                right: 0.2,    // Stejný jako levý
-                top: 0.3,
-                bottom: 0.3,
+                left: 0.1,
+                right: 0.1,
+                top: 0.2,
+                bottom: 0.2,
                 header: 0,
                 footer: 0
             };
 
-            // Pouze nutné nastavení stránky
-            ws['!pageSetup'] = {
-                paperSize: 9,        // A4
-                orientation: 'portrait'
-            };
-
-            // Přidáme ohraničení a styly
-            ws['!rows'] = Array(finalData.length).fill({ hpt: 25 }); // Výška řádků
-            
-            // Nastavíme ohraničení pro celou tabulku
+            // Základní styly
             const range = XLSX.utils.decode_range(ws['!ref']);
             for(let R = range.s.r; R <= range.e.r; R++) {
                 for(let C = range.s.c; C <= range.e.c; C++) {
                     const cell_ref = XLSX.utils.encode_cell({r: R, c: C});
                     if(!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
                     ws[cell_ref].s = {
-                        border: {
-                            top: { style: 'thin' },
-                            bottom: { style: 'thin' },
-                            left: { style: 'thin' },
-                            right: { style: 'thin' }
-                        },
+                        font: { sz: 8 },  // Menší písmo
                         alignment: { 
                             vertical: 'center',
-                            wrapText: true  // Povolení zalamování textu
+                            wrapText: true
                         }
                     };
-
+                    
                     // Zarovnání čísel doprava
-                    if (C === 3 || C === 4) { // sloupce s množstvím a cenou
+                    if (C === 3 || C === 4) {
                         ws[cell_ref].s.alignment.horizontal = 'right';
                     }
                 }
