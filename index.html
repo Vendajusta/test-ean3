@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat eru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -801,7 +801,8 @@
             }).replace(/[. :]/g, '');
             
             const headerRows = [
-                ['Dodací list/daňový doklad', '', '', '', '', docNumber],  // Přidáno číslo vpravo     
+                // První řádek rozdělen - číslo bude samostatně v poslední buňce
+                ['Dodací list/daňový doklad', '', '', '', '', docNumber],
                 ['Datum zdanitelného plnění:' , '', '', '', '', ''],
                 ['Odběratel:' , '', '', '', '', ''],
                 ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', '', '', '', '', ''],
@@ -902,7 +903,7 @@
 
             // Upravíme sloučení buněk pro hlavičku aby počítalo s novým řádkem
             ws['!merges'] = [
-                {s: {r: 0, c: 0}, e: {r: 0, c: 5}},  // Dodací list
+                // První řádek už není sloučený
                 {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
                 {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Odběratel
                 {s: {r: 3, c: 0}, e: {r: 3, c: 5}},  // Dodavatel - první řádek
@@ -932,7 +933,6 @@
             loadTableFromStorage();
             loadDatabase();
         });
-
         async function addManualItem() {
             const name = await customPrompt('Zadejte název:', '');
             if (name) {
