@@ -838,18 +838,28 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Upravené šířky sloupců - širší sloupec pro položky
+            // Ještě užší sloupce a větší prostor pro název
             ws['!cols'] = [
-                {wch: 3},     // Č. - minimální
-                {wch: 7},     // Int. kód - více zúženo
-                {wch: 40},    // Název/Položky - rozšířeno
-                {wch: 7},     // MJ - více zúženo
-                {wch: 8},     // Cena - zúženo
-                {wch: 10}     // EAN - více zúženo
+                {wch: 3},     // Č.
+                {wch: 6},     // Int. kód - ještě užší
+                {wch: 45},    // Název/Položky - ještě širší
+                {wch: 6},     // MJ - ještě užší
+                {wch: 7},     // Cena - ještě užší
+                {wch: 9}      // EAN - ještě užší
             ];
 
-            // Minimální výška řádků
-            ws['!rows'] = Array(finalData.length).fill({ hpt: 15 }); // Snížená výška na 15
+            // Extra malé okraje - hlavně vpravo
+            ws['!margins'] = {
+                left: 0.3,      // Menší levý okraj
+                right: 0.2,     // Minimální pravý okraj
+                top: 0.5,
+                bottom: 0.5,
+                header: 0.0,
+                footer: 0.0
+            };
+
+            // Menší výška řádků
+            ws['!rows'] = Array(finalData.length).fill({ hpt: 14 }); // Ještě menší výška
 
             // A4 nastavení s menšími okraji
             ws['!pageSetup'] = {
