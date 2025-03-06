@@ -801,7 +801,7 @@
             }).replace(/[. :]/g, '');
             
             const headerRows = [
-                ['Dodací list/daňový doklad' , '', '', '', '', docNumber],  // Přidáno číslo vpravo     
+                ['Dodací list/daňový doklad', '', '', '', '', docNumber],  // Přidáno číslo vpravo     
                 ['Datum zdanitelného plnění:' , '', '', '', '', ''],
                 ['Odběratel:' , '', '', '', '', ''],
                 ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', '', '', '', '', ''],
@@ -909,6 +909,19 @@
                 {s: {r: 4, c: 0}, e: {r: 4, c: 5}},  // Dodavatel - druhý řádek
                 {s: {r: 5, c: 0}, e: {r: 5, c: 5}}   // Prázdný řádek
             ];
+
+            // Nastavení zarovnání pro první řádek
+            const firstRowRange = XLSX.utils.decode_range(ws['!ref']).s.r;
+            const cell1 = XLSX.utils.encode_cell({r: firstRowRange, c: 0});
+            const cell6 = XLSX.utils.encode_cell({r: firstRowRange, c: 5});
+            
+            // Zarovnání doleva pro "Dodací list/daňový doklad"
+            if(!ws[cell1]) ws[cell1] = {};
+            ws[cell1].s = { alignment: { horizontal: 'left' } };
+            
+            // Zarovnání doprava pro číslo dokumentu
+            if(!ws[cell6]) ws[cell6] = {};
+            ws[cell6].s = { alignment: { horizontal: 'right' } };
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
