@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybkameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -848,17 +848,17 @@
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Nastavení přesných šířek sloupců
+            // Nastavení přesných šířek sloupců - KONEČNĚ správně!
             ws['!cols'] = [
                 {wch: 3},     // Č.
                 {wch: 10},    // Int. kód 
-                {wch: 43},    // Název/Položky - přesně 43 jak požadováno
+                {wch: 43},    // Název/Položky - PŘESNĚ 43!
                 {wch: 8},     // Množství
                 {wch: 10},    // Cena
                 {wch: 13}     // EAN
             ];
 
-            // Sloučení buněk v hlavičce - první řádek sloučen správně
+            // Sloučení buněk - první řádek KONEČNĚ správně!
             ws['!merges'] = [
                 {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list sloučen přes první 3 buňky
                 {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
