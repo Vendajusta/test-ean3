@@ -220,7 +220,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybratameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
@@ -858,14 +858,14 @@
                 footer: 0
             };
 
-            // DŮLEŽITÉ: Nejdřív nastavíme všem buňkám ohraničení a základní zarovnání
+            // Projdeme všechny buňky a nastavíme styly
             const range = XLSX.utils.decode_range(ws['!ref']);
             for(let R = range.s.r; R <= range.e.r; R++) {
                 for(let C = range.s.c; C <= range.e.c; C++) {
                     const cell_ref = XLSX.utils.encode_cell({r: R, c: C});
                     if(!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
                     
-                    // Základní styl pro všechny buňky
+                    // Základní styl pro každou buňku
                     ws[cell_ref].s = {
                         border: {
                             top: {style: 'thin'},
@@ -875,15 +875,14 @@
                         },
                         alignment: {
                             vertical: 'center',
+                            horizontal: 'right', // VÝCHOZÍ ZAROVNÁNÍ VPRAVO PRO VŠECHNY BUŇKY!
                             wrapText: true
                         }
                     };
 
-                    // POUZE poslední 3 sloupce zarovnáme doprava
-                    if (C >= 3) { // Sloupce 4,5,6 (množství, cena, EAN)
-                        ws[cell_ref].s.alignment.horizontal = 'right';
-                    } else {
-                        ws[cell_ref].s.alignment.horizontal = 'left'; // Ostatní doleva
+                    // Pouze první 3 sloupce doleva
+                    if (C <= 2) {
+                        ws[cell_ref].s.alignment.horizontal = 'left';
                     }
                 }
             }
