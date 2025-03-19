@@ -819,8 +819,8 @@
             // Data pro Excel
             let data = [];
 
-            // Hlavička dokumentu
-            data.push(['Dodací list/daňový doklad', '', '', '', '', hasDiscountColumn ? '' : 'č. ' + docNumber, hasDiscountColumn ? 'č. ' + docNumber : '']);
+            // Hlavička dokumentu - posunuté číslo o buňku doleva
+            data.push(['Dodací list/daňový doklad', '', '', '', hasDiscountColumn ? '' : 'č. ' + docNumber, hasDiscountColumn ? 'č. ' + docNumber : '', hasDiscountColumn ? '' : undefined]);
             data.push(['Datum zdanitelného plnění:', ...Array(hasDiscountColumn ? 6 : 5).fill('')]);
             data.push(['Odběratel:', ...Array(hasDiscountColumn ? 6 : 5).fill('')]);
             data.push(['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', ...Array(hasDiscountColumn ? 6 : 5).fill('')]);
