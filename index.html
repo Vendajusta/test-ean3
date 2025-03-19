@@ -100,7 +100,7 @@
             align-items: center;
             gap: 5px;
         }
-        .edit-price-btn {
+        .edit-price-btn, .edit-discount-btn {
             background-color: #4CAF50;
             color: white;
             border: none;
@@ -227,6 +227,15 @@
             background-color: #f44336;
             color: white;
         }
+        .discount-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .discount-value {
+            font-size: 20px;
+            color: #ff4444;
+        }
     </style>
 </head>
 <body>
@@ -234,6 +243,7 @@
     <div style="margin-bottom: 15px;">
         <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
+        <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
@@ -521,7 +531,8 @@
                     name: row.cells[2].textContent,
                     quantity: row.querySelector('.quantity-value').textContent,
                     price: row.querySelector('.price-value').textContent,
-                    ean: row.querySelector('.actions-container span').textContent
+                    ean: row.querySelector('.actions-container span').textContent,
+                    discount: row.querySelector('.discount-value')?.textContent || '0%'
                 };
                 tableData.push(rowData);
             });
@@ -534,6 +545,13 @@
                 const tableData = JSON.parse(savedData);
                 const table = document.getElementById("product-table");
                 table.innerHTML = '';
+
+                // Check if we need to add the discount column
+                const hasDiscount = tableData.some(item => item.discount && item.discount !== '0%');
+                if (hasDiscount) {
+                    const headerRow = document.querySelector('table thead tr');
+                    headerRow.insertCell().textContent = 'Sleva';
+                }
 
                 tableData.forEach(item => {
                     // Zachováme původní EAN kód včetně vykřičníku
@@ -562,6 +580,13 @@
                                     <button class="delete-btn" onclick="deleteRow(this)">×</button>
                                 </div>
                             </td>
+                            ${hasDiscount ? `
+                            <td>
+                                <div class="discount-container">
+                                    <span class="discount-value">${item.discount || '0%'}</span>
+                                    <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
+                                </div>
+                            </td>` : ''}
                         </tr>`;
                     table.innerHTML += row;
                 });
@@ -782,14 +807,32 @@
             }
         }
 
+        async function editDiscount(button) {
+            const discountSpan = button.previousElementSibling;
+            const currentDiscount = discountSpan.textContent.replace('%', '');
+            const newDiscount = await customPrompt('Zadejte slevu v procentech (0-100):', currentDiscount);
+            
+            if (newDiscount !== null && newDiscount.trim() !== '') {
+                const discount = Math.min(100, Math.max(0, parseInt(newDiscount) || 0));
+                discountSpan.textContent = discount + '%';
+                calculateTotals();
+                saveTableToStorage();
+            }
+        }
+
         function calculateTotals() {
             let totalPrice = 0;
             document.querySelectorAll("#product-table tr").forEach(row => {
                 const priceText = row.querySelector('.price-value').textContent;
                 const quantityText = row.querySelector('.quantity-value').textContent;
+                const discountEl = row.querySelector('.discount-value');
+                
                 const price = parseFloat(priceText.replace(',', '.').replace(/[^\d.]/g, '') || 0);
                 const quantity = parseInt(quantityText.replace(/[^\d]/g, '') || 0);
-                totalPrice += price * quantity;
+                const discount = discountEl ? parseInt(discountEl.textContent) || 0 : 0;
+                
+                const rowTotal = price * quantity * (1 - discount / 100);
+                totalPrice += rowTotal;
             });
 
             const vat = totalPrice * 0.21;
@@ -813,14 +856,16 @@
                 minute: '2-digit'
             }).replace(/[. :]/g, '');
             
+            const hasDiscountColumn = document.querySelector('table th:last-child').textContent === 'Sleva';
+            
             const headerRows = [
-                ['Dodací list/daňový doklad', '', '', '', '', 'č. ' + docNumber], // Přidáno 'č. ' před číslo
-                ['Datum zdanitelného plnění:' , '', '', '', '', ''],
-                ['Odběratel:' , '', '', '', '', ''],
-                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', '', '', '', '', ''],
-                ['Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', ''],
-                ['', '', '', '', '', ''],
-                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']
+                ['Dodací list/daňový doklad', '', '', '', '', hasDiscountColumn ? '' : '', 'č. ' + docNumber],
+                ['Datum zdanitelného plnění:', '', '', '', '', hasDiscountColumn ? '' : '', ''],
+                ['Odběratel:', '', '', '', '', hasDiscountColumn ? '' : '', ''],
+                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', '', '', '', '', hasDiscountColumn ? '' : '', ''],
+                ['Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', hasDiscountColumn ? '' : '', ''],
+                ['', '', '', '', '', hasDiscountColumn ? '' : '', ''],
+                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN', hasDiscountColumn ? 'Sleva' : '']
             ];
 
             const tableData = [];
@@ -842,20 +887,25 @@
                     price,
                     ean // Zachováváme původní EAN včetně případného vykřičníku
                 ];
+                
+                if (hasDiscountColumn) {
+                    rowData.push(row.querySelector('.discount-value').textContent.trim());
+                }
+                
                 tableData.push(rowData);
             });
 
             // Add empty row before totals
-            tableData.push(['', '', '', '', '', '']);
+            tableData.push(['', '', '', '', '', hasDiscountColumn ? '' : '']);
 
             // Add totals rows vertically
             const totalPrice = document.getElementById('total-price').textContent;
             const totalVat = document.getElementById('total-vat').textContent;
             const totalWithVat = document.getElementById('total-with-vat').textContent;
             
-            tableData.push(['', '', '', 'Bez DPH:','', totalPrice]);
-            tableData.push(['', '', '', 'DPH 21 %:','', totalVat]);
-            tableData.push(['', '', '',' Celkem:','', totalWithVat]);
+            tableData.push(['', '', '', 'Bez DPH:','', hasDiscountColumn ? '' : '', totalPrice]);
+            tableData.push(['', '', '', 'DPH 21 %:','', hasDiscountColumn ? '' : '', totalVat]);
+            tableData.push(['', '', '',' Celkem:','', hasDiscountColumn ? '' : '', totalWithVat]);
 
             const finalData = [...headerRows, ...tableData];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
@@ -885,11 +935,11 @@
             // JEDINÉ správné nastavení sloučení buněk!
             ws['!merges'] = [
                 {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list přes první 3 buňky
-                {s: {r: 1, c: 0}, e: {r: 1, c: 5}},  // Datum
-                {s: {r: 2, c: 0}, e: {r: 2, c: 5}},  // Odběratel
-                {s: {r: 3, c: 0}, e: {r: 3, c: 5}},  // Dodavatel
-                {s: {r: 4, c: 0}, e: {r: 4, c: 5}},  // Adresa
-                {s: {r: 5, c: 0}, e: {r: 5, c: 5}}   // Prázdný řádek
+                {s: {r: 1, c: 0}, e: {r: 1, c: hasDiscountColumn ? 6 : 5}},  // Datum
+                {s: {r: 2, c: 0}, e: {r: 2, c: hasDiscountColumn ? 6 : 5}},  // Odběratel
+                {s: {r: 3, c: 0}, e: {r: 3, c: hasDiscountColumn ? 6 : 5}},  // Dodavatel
+                {s: {r: 4, c: 0}, e: {r: 4, c: hasDiscountColumn ? 6 : 5}},  // Adresa
+                {s: {r: 5, c: 0}, e: {r: 5, c: hasDiscountColumn ? 6 : 5}}   // Prázdný řádek
             ];
 
             ws['!cols'] = [
@@ -900,16 +950,16 @@
                 {wch: 10, alignment: {horizontal: 'right'}},    // Cena
                 {wch: 13, alignment: {horizontal: 'right'}}     // EAN
             ];
+            
+            if (hasDiscountColumn) {
+                ws['!cols'].push({wch: 8, alignment: {horizontal: 'right'}});
+            }
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
 
-        window.addEventListener('load', () => {
-            loadTableFromStorage();
-            loadDatabase();
-        });
         async function addManualItem() {
             const name = await customPrompt('Zadejte název:', '');
             if (name) {
@@ -921,6 +971,39 @@
                 }
             }
         }
+
+        function toggleDiscountColumn() {
+            const table = document.querySelector('table');
+            const hasDiscountColumn = table.querySelector('th:last-child').textContent === 'Sleva';
+            
+            if (!hasDiscountColumn) {
+                // Add header
+                const headerRow = table.querySelector('thead tr');
+                headerRow.insertCell().textContent = 'Sleva';
+                
+                // Add column to existing rows
+                document.querySelectorAll('#product-table tr').forEach(row => {
+                    const cell = row.insertCell();
+                    cell.innerHTML = `
+                        <div class="discount-container">
+                            <span class="discount-value">0%</span>
+                            <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
+                        </div>`;
+                });
+            } else {
+                // Remove discount column
+                table.querySelectorAll('tr').forEach(row => {
+                    row.deleteCell(-1);
+                });
+            }
+            calculateTotals();
+            saveTableToStorage();
+        }
+
+        window.addEventListener('load', () => {
+            loadTableFromStorage();
+            loadDatabase();
+        });
     </script>
     <button onclick="clearStoredData()" style="margin-top: 10px; background-color: #ff4444; color: white;">Vymazat všechny položky</button>
 </body>
