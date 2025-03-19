@@ -243,7 +243,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vyberu</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
@@ -816,25 +816,25 @@
                 hour: '2-digit',
                 minute: '2-digit'
             }).replace(/[. :]/g, '');
-            
+
             // Create empty array with correct length
             const emptyRow = Array(colCount).fill('');
             
-            // Header rows
+            // Header rows with proper column count
             const headerRows = [
-                ['Dodací list/daňový doklad', '', '', '', '', '', 'č. ' + docNumber],
+                ['Dodací list/daňový doklad', '', '', '', '', hasDiscountColumn ? '' : '', 'č. ' + docNumber],
                 ['Datum zdanitelného plnění:', ...emptyRow.slice(1)],
                 ['Odběratel:', ...emptyRow.slice(1)],
                 ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', ...emptyRow.slice(1)],
                 ['Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', ...emptyRow.slice(1)],
                 emptyRow,
-                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN', hasDiscountColumn ? 'Sleva' : ''].filter(Boolean)
+                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN', hasDiscountColumn ? 'Sleva' : '']
             ];
 
-            // Get table data including discounts
+            // Get table data
             const tableData = [];
             document.querySelectorAll("#product-table tr").forEach(row => {
-                const data = [
+                const rowData = [
                     row.cells[0].textContent.trim(),
                     row.cells[1].textContent.trim(),
                     row.cells[2].textContent.trim(),
@@ -842,40 +842,40 @@
                     row.querySelector('.price-value').textContent.trim(),
                     row.querySelector('.actions-container span').textContent.trim()
                 ];
-                
+
                 if (hasDiscountColumn) {
-                    data.push(row.querySelector('.discount-value').textContent.trim());
+                    rowData.push(row.querySelector('.discount-value').textContent.trim());
                 }
                 
-                tableData.push(data);
+                tableData.push(rowData);
             });
 
-            // Add empty row before totals
+            // Add empty row and totals
             tableData.push(emptyRow);
 
             const totalPrice = document.getElementById('total-price').textContent;
             const totalVat = document.getElementById('total-vat').textContent;
             const totalWithVat = document.getElementById('total-with-vat').textContent;
 
-            // Create totals rows with correct alignment
+            // Add totals
             const totalRows = [
-                ['', '', '', 'Bez DPH:', '', '', totalPrice],
-                ['', '', '', 'DPH 21 %:', '', '', totalVat],
-                ['', '', '', 'Celkem:', '', '', totalWithVat]
-            ].map(row => row.slice(0, colCount));
+                Array(colCount).fill('').map((_, i) => i === 3 ? 'Bez DPH:' : i === colCount - 1 ? totalPrice : ''),
+                Array(colCount).fill('').map((_, i) => i === 3 ? 'DPH 21 %:' : i === colCount - 1 ? totalVat : ''),
+                Array(colCount).fill('').map((_, i) => i === 3 ? 'Celkem:' : i === colCount - 1 ? totalWithVat : '')
+            ];
 
             const finalData = [...headerRows, ...tableData, ...totalRows];
             const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Set column widths
+            // Set column widths including discount column
             ws['!cols'] = [
                 {wch: 3},     // Č.
                 {wch: 10},    // Int. kód
-                {wch: 30},    // Název/Položky - Changed from 43
+                {wch: 30},    // Název/Položky
                 {wch: 8},     // Množství
                 {wch: 10},    // Cena
                 {wch: 13},    // EAN
-                {wch: 8}      // Sleva
+                hasDiscountColumn ? {wch: 8} : undefined // Sleva
             ].filter(Boolean);
 
             // Set merge regions
@@ -888,14 +888,19 @@
                 {s: {r: 5, c: 0}, e: {r: 5, c: colCount - 1}}  // Prázdný řádek
             ];
 
-            // Add text wrapping for the name column
+            // Set text wrapping and alignment
             Object.keys(ws).forEach(cell => {
+                if (!ws[cell].s) ws[cell].s = {};
+                
+                // Text wrapping for name column
                 if (cell.startsWith('C')) {
-                    if (!ws[cell].s) ws[cell].s = {};
-                    ws[cell].s.alignment = { 
-                        wrapText: true,
-                        vertical: 'top'
-                    };
+                    ws[cell].s.alignment = { wrapText: true, vertical: 'top' };
+                }
+                
+                // Right alignment for numbers and discounts
+                if (cell.startsWith('D') || cell.startsWith('E') || 
+                    (hasDiscountColumn && cell.startsWith('G'))) {
+                    ws[cell].s.alignment = { horizontal: 'right' };
                 }
             });
 
