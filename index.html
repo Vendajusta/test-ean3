@@ -241,7 +241,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
@@ -598,11 +598,11 @@
             }
         }
 
-        function addProduct(code, name, quantity) {
+        function addProduct(code, name, quantity, price = null) {  // Added price parameter
             const product = database[code];
             const table = document.getElementById("product-table");
             const rowCount = table.getElementsByTagName("tr").length + 1;
-            const hasDiscountColumn = table.querySelector('thead tr th:last-child')?.textContent === 'Sleva';
+            const hasDiscountColumn = document.querySelector('table thead tr th:last-child')?.textContent === 'Sleva';
             
             let rowHtml = `
                 <tr>
@@ -617,7 +617,7 @@
                     </td>
                     <td>
                         <div class="price-container">
-                            <span class="price-value">${product ? formatPrice(product.price) : '-'}</span>
+                            <span class="price-value">${product ? formatPrice(product.price) : formatPrice(price || '-')}</span>
                             <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
                         </div>
                     </td>
@@ -928,23 +928,22 @@
                 const quantity = await customPrompt(`Název: ${name}\nCena: ${price}\n\nZadejte počet kusů:`, '1');
                 
                 if (quantity) {
-                    addProduct('', name, quantity); // Prázdný kód pro ruční položku
+                    addProduct('', name, quantity, price); // Pass the price to addProduct
                 }
             }
         }
 
         function toggleDiscountColumn() {
             const table = document.querySelector('table');
-            const hasDiscountColumn = table.querySelector('thead tr th:last-child')?.textContent === 'Sleva';
-            const emptyRow = document.querySelector('.empty-row td');
-            const totalRow = document.querySelector('.total-cell');
+            const hasDiscountColumn = document.querySelector('table thead tr th:last-child')?.textContent === 'Sleva';
             
             if (!hasDiscountColumn) {
-                // Add header only if it doesn't exist
+                // Prevent adding multiple discount columns
+                if (document.querySelectorAll('table thead tr th').length >= 7) return;
+                
+                // Add header
                 const headerRow = table.querySelector('thead tr');
-                if (!headerRow.querySelector('th:last-child')?.textContent === 'Sleva') {
-                    headerRow.insertCell().textContent = 'Sleva';
-                }
+                headerRow.insertCell().textContent = 'Sleva';
                 
                 // Add column to existing rows
                 document.querySelectorAll('#product-table tr').forEach(row => {
@@ -957,8 +956,8 @@
                 });
 
                 // Update colspan
-                emptyRow.setAttribute('colspan', '7');
-                totalRow.setAttribute('colspan', '7');
+                document.querySelector('.empty-row td').setAttribute('colspan', '7');
+                document.querySelector('.total-cell').setAttribute('colspan', '7');
             } else {
                 // Remove discount column
                 table.querySelectorAll('tr').forEach(row => {
@@ -968,8 +967,8 @@
                 });
                 
                 // Update colspan
-                emptyRow.setAttribute('colspan', '6');
-                totalRow.setAttribute('colspan', '6');
+                document.querySelector('.empty-row td').setAttribute('colspan', '6');
+                document.querySelector('.total-cell').setAttribute('colspan', '6');
             }
             calculateTotals();
             saveTableToStorage();
