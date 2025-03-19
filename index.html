@@ -602,99 +602,45 @@
             const product = database[code];
             const table = document.getElementById("product-table");
             const rowCount = table.getElementsByTagName("tr").length + 1;
-            const hasDiscountColumn = document.querySelectorAll('table th').length > 6;
-            const discountCell = hasDiscountColumn ? `
-                <td>
-                    <div class="discount-container">
-                        <span class="discount-value">0%</span>
-                        <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
-                    </div>
-                </td>` : '';
+            const hasDiscountColumn = table.querySelector('thead tr th:last-child')?.textContent === 'Sleva';
             
-            if (product) {
-                // Známý produkt z databáze - bez vykřičníku
-                let row = `
-                    <tr>
-                        <td>${rowCount}</td>
-                        <td>${product.intCode}</td>
-                        <td>${product.name}${product.text ? ' - ' + product.text : ''}</td>
-                        <td>
-                            <div class="quantity-container">
-                                <span class="quantity-value">${quantity} ks</span>
-                                <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="price-container">
-                                <span class="price-value">${formatPrice(product.price)}</span>
-                                <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="actions-container">
-                                <span>${code}</span>
-                                <button class="delete-btn" onclick="deleteRow(this)">×</button>
-                            </div>
-                        </td>
-                        ${discountCell}
-                    </tr>`;
-                table.innerHTML += row;
-            } else if (code) {
-                // Naskenovaný ale neznámý produkt - s vykřičníkem
-                let row = `
-                    <tr>
-                        <td>${rowCount}</td>
-                        <td>-</td>
-                        <td>${name}</td>
-                        <td>
-                            <div class="quantity-container">
-                                <span class="quantity-value">${quantity} ks</span>
-                                <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="price-container">
-                                <span class="price-value">-</span>
-                                <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="actions-container">
-                                <span>${code} !</span>
-                                <button class="delete-btn" onclick="deleteRow(this)">×</button>
-                            </div>
-                        </td>
-                        ${discountCell}
-                    </tr>`;
-                table.innerHTML += row;
-            } else { // Ručně přidaná položka
-                let row = `
-                    <tr>
-                        <td>${rowCount}</td>
-                        <td>-</td>
-                        <td>${name}</td>
-                        <td>
-                            <div class="quantity-container">
-                                <span class="quantity-value">${quantity} ks</span>
-                                <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="price-container">
-                                <span class="price-value">-</span>
-                                <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="actions-container">
-                                <span></span>
-                                <button class="delete-btn" onclick="deleteRow(this)">×</button>
-                            </div>
-                        </td>
-                        ${discountCell}
-                    </tr>`;
-                table.innerHTML += row;
+            let rowHtml = `
+                <tr>
+                    <td>${rowCount}</td>
+                    <td>${product ? product.intCode : '-'}</td>
+                    <td>${product ? product.name + (product.text ? ' - ' + product.text : '') : name}</td>
+                    <td>
+                        <div class="quantity-container">
+                            <span class="quantity-value">${quantity} ks</span>
+                            <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="price-container">
+                            <span class="price-value">${product ? formatPrice(product.price) : '-'}</span>
+                            <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="actions-container">
+                            <span>${code ? code + (!product ? ' !' : '') : ''}</span>
+                            <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                        </div>
+                    </td>`;
+
+            if (hasDiscountColumn) {
+                rowHtml += `
+                    <td>
+                        <div class="discount-container">
+                            <span class="discount-value">0%</span>
+                            <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
+                        </div>
+                    </td>`;
             }
+
+            rowHtml += `</tr>`;
+            table.innerHTML += rowHtml;
+            
             calculateTotals();
             saveTableToStorage();
         }
@@ -989,12 +935,16 @@
 
         function toggleDiscountColumn() {
             const table = document.querySelector('table');
-            const hasDiscountColumn = document.querySelectorAll('table th').length > 6;
+            const hasDiscountColumn = table.querySelector('thead tr th:last-child')?.textContent === 'Sleva';
+            const emptyRow = document.querySelector('.empty-row td');
+            const totalRow = document.querySelector('.total-cell');
             
             if (!hasDiscountColumn) {
-                // Add header
+                // Add header only if it doesn't exist
                 const headerRow = table.querySelector('thead tr');
-                headerRow.insertCell().textContent = 'Sleva';
+                if (!headerRow.querySelector('th:last-child')?.textContent === 'Sleva') {
+                    headerRow.insertCell().textContent = 'Sleva';
+                }
                 
                 // Add column to existing rows
                 document.querySelectorAll('#product-table tr').forEach(row => {
@@ -1005,17 +955,22 @@
                             <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
                         </div>`;
                 });
+
+                // Update colspan
+                emptyRow.setAttribute('colspan', '7');
+                totalRow.setAttribute('colspan', '7');
             } else {
                 // Remove discount column
                 table.querySelectorAll('tr').forEach(row => {
-                    row.deleteCell(-1);
+                    if (row.cells.length > 6) {
+                        row.deleteCell(-1);
+                    }
                 });
+                
+                // Update colspan
+                emptyRow.setAttribute('colspan', '6');
+                totalRow.setAttribute('colspan', '6');
             }
-            
-            // Always ensure correct colspan
-            document.querySelector('.empty-row td').setAttribute('colspan', hasDiscountColumn ? '6' : '7');
-            document.querySelector('.total-cell').setAttribute('colspan', hasDiscountColumn ? '6' : '7');
-            
             calculateTotals();
             saveTableToStorage();
         }
