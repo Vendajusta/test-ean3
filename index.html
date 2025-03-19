@@ -803,7 +803,10 @@
 
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
+            
+            // Správná detekce sloupce slev + aktuální šířka tabulky
             const hasDiscountColumn = document.querySelector('table thead tr th:last-child')?.textContent === 'Sleva';
+            const cols = hasDiscountColumn ? 7 : 6;
             
             const now = new Date();
             const docNumber = now.getFullYear().toString().slice(-2) + 
@@ -814,60 +817,81 @@
                     minute: '2-digit'
                 }).replace(/[. :]/g, '');
         
-            // Příprava dat pro Excel
+            // Základní hlavičky - vždy mají správný počet sloupců
             const headers = [
-                ['Dodací list/daňový doklad', '', '', '', '', '', 'č. ' + docNumber],
-                ['Datum zdanitelného plnění:', '', '', '', '', '', ''],
-                ['Odběratel:', '', '', '', '', '', ''],
-                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', '', '', '', '', '', ''],
-                ['Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', '', '', '', '', '', ''],
-                ['', '', '', '', '', '', ''],
-                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN', 'Sleva']
+                Array(cols).fill('').map((_, i) => i === 0 ? 'Dodací list/daňový doklad' : i === cols-1 ? 'č. ' + docNumber : ''),
+                ['Datum zdanitelného plnění:', ...Array(cols-1).fill('')],
+                ['Odběratel:', ...Array(cols-1).fill('')],
+                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', ...Array(cols-1).fill('')],
+                ['Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', ...Array(cols-1).fill('')],
+                Array(cols).fill(''),
+                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN', hasDiscountColumn ? 'Sleva' : ''].slice(0, cols)
             ];
         
-            // Data z tabulky
-            const rows = Array.from(document.querySelectorAll("#product-table tr")).map(row => [
-                row.cells[0].textContent.trim(),
-                row.cells[1].textContent.trim(),
-                row.cells[2].textContent.trim(),
-                row.querySelector('.quantity-value').textContent.trim(),
-                row.querySelector('.price-value').textContent.trim(),
-                row.querySelector('.actions-container span').textContent.trim(),
-                hasDiscountColumn ? row.querySelector('.discount-value').textContent.trim() : '0%'
-            ]);
+            // Data z tabulky včetně slev (pouze pokud jsou aktivní)
+            const rows = Array.from(document.querySelectorAll("#product-table tr")).map(row => {
+                const baseData = [
+                    row.cells[0].textContent.trim(),
+                    row.cells[1].textContent.trim(),
+                    row.cells[2].textContent.trim(),
+                    row.querySelector('.quantity-value').textContent.trim(),
+                    row.querySelector('.price-value').textContent.trim(),
+                    row.querySelector('.actions-container span').textContent.trim()
+                ];
+                
+                if (hasDiscountColumn) {
+                    const discountVal = row.querySelector('.discount-value').textContent.trim();
+                    baseData.push(discountVal);
+                }
+                
+                return baseData;
+            });
         
-            // Prázdný řádek a součty
+            // Prázdný řádek s korektním počtem sloupců
+            const emptyRow = Array(cols).fill('');
+            rows.push(emptyRow);
+        
+            // Součty se správným počtem sloupců
             const totals = [
-                ['', '', '', '', '', '', ''],
-                ['', '', '', 'Bez DPH:', '', '', document.getElementById('total-price').textContent],
-                ['', '', '', 'DPH 21 %:', '', '', document.getElementById('total-vat').textContent],
-                ['', '', '', 'Celkem:', '', '', document.getElementById('total-with-vat').textContent]
+                Array(cols).fill('').map((_, i) => i === 3 ? 'Bez DPH:' : i === cols-1 ? document.getElementById('total-price').textContent : ''),
+                Array(cols).fill('').map((_, i) => i === 3 ? 'DPH 21 %:' : i === cols-1 ? document.getElementById('total-vat').textContent : ''),
+                Array(cols).fill('').map((_, i) => i === 3 ? 'Celkem:' : i === cols-1 ? document.getElementById('total-with-vat').textContent : '')
             ];
         
             const ws = XLSX.utils.aoa_to_sheet([...headers, ...rows, ...totals]);
         
-            // Nastavení
-            ws['!cols'] = [
-                {wch: 3},  // Č.
-                {wch: 10}, // Int. kód
-                {wch: 35}, // Název/Položky
-                {wch: 8},  // Množství
-                {wch: 10}, // Cena
-                {wch: 13}, // EAN
-                {wch: 8}   // Sleva
+            // Nastavení šířek sloupců
+            const columns = [
+                {wch: 3},     // Č.
+                {wch: 10},    // Int. kód
+                {wch: 35},    // Název/Položky
+                {wch: 8},     // Množství
+                {wch: 10},    // Cena
+                {wch: 13},    // EAN
             ];
-        
+            
+            if (hasDiscountColumn) {
+                columns.push({wch: 8}); // Sleva
+            }
+            
+            ws['!cols'] = columns;
+            
             // Minimální okraje
-            ws['!margins'] = { left: 0.2, right: 0.2, top: 0.2, bottom: 0.2 };
+            ws['!margins'] = {
+                left: 0.2,
+                right: 0.2,
+                top: 0.2,
+                bottom: 0.2
+            };
         
-            // Sloučení buněk v hlavičce
+            // Správné sloučení buněk
             ws['!merges'] = [
-                {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list
-                {s: {r: 1, c: 0}, e: {r: 1, c: 6}},  // Datum
-                {s: {r: 2, c: 0}, e: {r: 2, c: 6}},  // Odběratel
-                {s: {r: 3, c: 0}, e: {r: 3, c: 6}},  // Dodavatel
-                {s: {r: 4, c: 0}, e: {r: 4, c: 6}},  // Adresa
-                {s: {r: 5, c: 0}, e: {r: 5, c: 6}}   // Prázdný řádek
+                {s: {r: 0, c: 0}, e: {r: 0, c: 2}},
+                {s: {r: 1, c: 0}, e: {r: 1, c: cols-1}},
+                {s: {r: 2, c: 0}, e: {r: 2, c: cols-1}},
+                {s: {r: 3, c: 0}, e: {r: 3, c: cols-1}},
+                {s: {r: 4, c: 0}, e: {r: 4, c: cols-1}},
+                {s: {r: 5, c: 0}, e: {r: 5, c: cols-1}}
             ];
         
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
