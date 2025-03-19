@@ -265,10 +265,10 @@
             <tbody id="product-table"></tbody>
             <tfoot>
                 <tr class="empty-row">
-                    <td colspan="7"></td>
+                    <td colspan="6"></td>
                 </tr>
                 <tr class="summary-row">
-                    <td colspan="7" class="total-cell">
+                    <td colspan="6" class="total-cell">
                         součet: <span id="total-price">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
                         DPH: <span id="total-vat">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
                         celkem: <span id="total-with-vat">0,00 Kč</span>
@@ -551,6 +551,10 @@
                 if (hasDiscount) {
                     const headerRow = document.querySelector('table thead tr');
                     headerRow.insertCell().textContent = 'Sleva';
+                    
+                    // Update colspan for footer rows
+                    document.querySelector('.empty-row td').setAttribute('colspan', '7');
+                    document.querySelector('.total-cell').setAttribute('colspan', '7');
                 }
 
                 tableData.forEach(item => {
@@ -986,11 +990,17 @@
         function toggleDiscountColumn() {
             const table = document.querySelector('table');
             const hasDiscountColumn = table.querySelector('th:last-child').textContent === 'Sleva';
+            const emptyRow = document.querySelector('.empty-row td');
+            const totalRow = document.querySelector('.total-cell');
             
             if (!hasDiscountColumn) {
                 // Add header
                 const headerRow = table.querySelector('thead tr');
                 headerRow.insertCell().textContent = 'Sleva';
+                
+                // Update colspan for footer rows
+                emptyRow.setAttribute('colspan', '7');
+                totalRow.setAttribute('colspan', '7');
                 
                 // Add column to existing rows
                 document.querySelectorAll('#product-table tr').forEach(row => {
@@ -1002,6 +1012,10 @@
                         </div>`;
                 });
             } else {
+                // Update colspan for footer rows
+                emptyRow.setAttribute('colspan', '6');
+                totalRow.setAttribute('colspan', '6');
+                
                 // Remove discount column
                 table.querySelectorAll('tr').forEach(row => {
                     row.deleteCell(-1);
