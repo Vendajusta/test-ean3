@@ -265,10 +265,10 @@
             <tbody id="product-table"></tbody>
             <tfoot>
                 <tr class="empty-row">
-                    <td colspan="6"></td>
+                    <td colspan="7"></td>
                 </tr>
                 <tr class="summary-row">
-                    <td colspan="6" class="total-cell">
+                    <td colspan="7" class="total-cell">
                         součet: <span id="total-price">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
                         DPH: <span id="total-vat">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
                         celkem: <span id="total-with-vat">0,00 Kč</span>
@@ -602,7 +602,7 @@
             const product = database[code];
             const table = document.getElementById("product-table");
             const rowCount = table.getElementsByTagName("tr").length + 1;
-            const hasDiscountColumn = document.querySelector('table th:last-child').textContent === 'Sleva';
+            const hasDiscountColumn = document.querySelectorAll('table th').length > 6;
             const discountCell = hasDiscountColumn ? `
                 <td>
                     <div class="discount-container">
@@ -989,18 +989,12 @@
 
         function toggleDiscountColumn() {
             const table = document.querySelector('table');
-            const hasDiscountColumn = table.querySelector('th:last-child').textContent === 'Sleva';
-            const emptyRow = document.querySelector('.empty-row td');
-            const totalRow = document.querySelector('.total-cell');
+            const hasDiscountColumn = document.querySelectorAll('table th').length > 6;
             
             if (!hasDiscountColumn) {
                 // Add header
                 const headerRow = table.querySelector('thead tr');
                 headerRow.insertCell().textContent = 'Sleva';
-                
-                // Update colspan for footer rows
-                emptyRow.setAttribute('colspan', '7');
-                totalRow.setAttribute('colspan', '7');
                 
                 // Add column to existing rows
                 document.querySelectorAll('#product-table tr').forEach(row => {
@@ -1012,15 +1006,16 @@
                         </div>`;
                 });
             } else {
-                // Update colspan for footer rows
-                emptyRow.setAttribute('colspan', '6');
-                totalRow.setAttribute('colspan', '6');
-                
                 // Remove discount column
                 table.querySelectorAll('tr').forEach(row => {
                     row.deleteCell(-1);
                 });
             }
+            
+            // Always ensure correct colspan
+            document.querySelector('.empty-row td').setAttribute('colspan', hasDiscountColumn ? '6' : '7');
+            document.querySelector('.total-cell').setAttribute('colspan', hasDiscountColumn ? '6' : '7');
+            
             calculateTotals();
             saveTableToStorage();
         }
