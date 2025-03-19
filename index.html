@@ -598,6 +598,14 @@
             const product = database[code];
             const table = document.getElementById("product-table");
             const rowCount = table.getElementsByTagName("tr").length + 1;
+            const hasDiscountColumn = document.querySelector('table th:last-child').textContent === 'Sleva';
+            const discountCell = hasDiscountColumn ? `
+                <td>
+                    <div class="discount-container">
+                        <span class="discount-value">0%</span>
+                        <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
+                    </div>
+                </td>` : '';
             
             if (product) {
                 // Známý produkt z databáze - bez vykřičníku
@@ -624,6 +632,7 @@
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
+                        ${discountCell}
                     </tr>`;
                 table.innerHTML += row;
             } else if (code) {
@@ -651,6 +660,7 @@
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
+                        ${discountCell}
                     </tr>`;
                 table.innerHTML += row;
             } else { // Ručně přidaná položka
@@ -677,6 +687,7 @@
                                 <button class="delete-btn" onclick="deleteRow(this)">×</button>
                             </div>
                         </td>
+                        ${discountCell}
                     </tr>`;
                 table.innerHTML += row;
             }
