@@ -243,7 +243,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
@@ -820,7 +820,7 @@
             let data = [];
 
             // Hlavička dokumentu - posunuté číslo o buňku doleva
-            data.push(['Dodací list/daňový doklad', '', '', '', hasDiscountColumn ? '' : 'č. ' + docNumber, hasDiscountColumn ? 'č. ' + docNumber : '', hasDiscountColumn ? '' : undefined]);
+            data.push(['Dodací list/daňový doklad', '', '', '', 'č. ' + docNumber, '', hasDiscountColumn ? '' : undefined]);
             data.push(['Datum zdanitelného plnění:', ...Array(hasDiscountColumn ? 6 : 5).fill('')]);
             data.push(['Odběratel:', ...Array(hasDiscountColumn ? 6 : 5).fill('')]);
             data.push(['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', ...Array(hasDiscountColumn ? 6 : 5).fill('')]);
@@ -876,7 +876,8 @@
 
             // Sloučení buněk v hlavičce
             ws['!merges'] = [
-                {s: {r: 0, c: 0}, e: {r: 0, c: 2}},
+                {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Sloučení "Dodací list/daňový doklad"
+                {s: {r: 0, c: 4}, e: {r: 0, c: 5}},  // Sloučení čísla dokumentu
                 {s: {r: 1, c: 0}, e: {r: 1, c: hasDiscountColumn ? 6 : 5}},
                 {s: {r: 2, c: 0}, e: {r: 2, c: hasDiscountColumn ? 6 : 5}},
                 {s: {r: 3, c: 0}, e: {r: 3, c: hasDiscountColumn ? 6 : 5}},
