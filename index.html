@@ -241,7 +241,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
@@ -602,40 +602,41 @@
             const product = database[code];
             const table = document.getElementById("product-table");
             const rowCount = table.getElementsByTagName("tr").length + 1;
-            // Check for discount column in thead instead of last column
-            const hasDiscountColumn = table.querySelector('thead tr th:last-child')?.textContent === 'Sleva';
+            // Check for discount column by counting thead cells instead
+            const hasDiscountColumn = document.querySelectorAll('table thead tr th').length === 7;
             
-            let rowHtml = `
-                <tr>
-                    <td>${rowCount}</td>
-                    <td>${product ? product.intCode : '-'}</td>
-                    <td>${product ? product.name + (product.text ? ' - ' + product.text : '') : name}</td>
-                    <td>
-                        <div class="quantity-container">
-                            <span class="quantity-value">${quantity} ks</span>
-                            <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="price-container">
-                            <span class="price-value">${product ? formatPrice(product.price) : formatPrice(price || '-')}</span>
-                            <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="actions-container">
-                            <span>${code ? code + (!product ? ' !' : '') : ''}</span>
-                            <button class="delete-btn" onclick="deleteRow(this)">×</button>
-                        </div>
-                    </td>${hasDiscountColumn ? `
-                    <td>
-                        <div class="discount-container">
-                            <span class="discount-value">0%</span>
-                            <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
-                        </div>
-                    </td>` : ''}</tr>`;
+            let row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${rowCount}</td>
+                <td>${product ? product.intCode : '-'}</td>
+                <td>${product ? product.name + (product.text ? ' - ' + product.text : '') : name}</td>
+                <td>
+                    <div class="quantity-container">
+                        <span class="quantity-value">${quantity} ks</span>
+                        <button class="edit-qty-btn" onclick="editQuantity(this)">✎</button>
+                    </div>
+                </td>
+                <td>
+                    <div class="price-container">
+                        <span class="price-value">${product ? formatPrice(product.price) : formatPrice(price || '-')}</span>
+                        <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
+                    </div>
+                </td>
+                <td>
+                    <div class="actions-container">
+                        <span>${code ? code + (!product ? ' !' : '') : ''}</span>
+                        <button class="delete-btn" onclick="deleteRow(this)">×</button>
+                    </div>
+                </td>
+                ${hasDiscountColumn ? `
+                <td>
+                    <div class="discount-container">
+                        <span class="discount-value">0%</span>
+                        <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
+                    </div>
+                </td>` : ''}`;
             
-            table.innerHTML += rowHtml;
+            table.appendChild(row);
             calculateTotals();
             saveTableToStorage();
         }
