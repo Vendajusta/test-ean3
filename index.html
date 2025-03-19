@@ -241,7 +241,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vybrameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
@@ -598,11 +598,12 @@
             }
         }
 
-        function addProduct(code, name, quantity, price = null) {  // Added price parameter
+        function addProduct(code, name, quantity, price = null) {
             const product = database[code];
             const table = document.getElementById("product-table");
             const rowCount = table.getElementsByTagName("tr").length + 1;
-            const hasDiscountColumn = document.querySelector('table thead tr th:last-child')?.textContent === 'Sleva';
+            // Check for discount column in thead instead of last column
+            const hasDiscountColumn = table.querySelector('thead tr th:last-child')?.textContent === 'Sleva';
             
             let rowHtml = `
                 <tr>
@@ -626,21 +627,15 @@
                             <span>${code ? code + (!product ? ' !' : '') : ''}</span>
                             <button class="delete-btn" onclick="deleteRow(this)">×</button>
                         </div>
-                    </td>`;
-
-            if (hasDiscountColumn) {
-                rowHtml += `
+                    </td>${hasDiscountColumn ? `
                     <td>
                         <div class="discount-container">
                             <span class="discount-value">0%</span>
                             <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
                         </div>
-                    </td>`;
-            }
-
-            rowHtml += `</tr>`;
-            table.innerHTML += rowHtml;
+                    </td>` : ''}</tr>`;
             
+            table.innerHTML += rowHtml;
             calculateTotals();
             saveTableToStorage();
         }
@@ -935,14 +930,17 @@
 
         function toggleDiscountColumn() {
             const table = document.querySelector('table');
-            const hasDiscountColumn = document.querySelector('table thead tr th:last-child')?.textContent === 'Sleva';
+            const headerRow = table.querySelector('thead tr');
+            const hasDiscountColumn = headerRow.querySelector('th:last-child')?.textContent === 'Sleva';
+
+            // Prevent toggling if we're trying to add a second discount column
+            if (!hasDiscountColumn && headerRow.cells.length >= 7) {
+                console.log('Discount column already exists');
+                return;
+            }
             
             if (!hasDiscountColumn) {
-                // Prevent adding multiple discount columns
-                if (document.querySelectorAll('table thead tr th').length >= 7) return;
-                
                 // Add header
-                const headerRow = table.querySelector('thead tr');
                 headerRow.insertCell().textContent = 'Sleva';
                 
                 // Add column to existing rows
@@ -955,18 +953,18 @@
                         </div>`;
                 });
 
-                // Update colspan
+                // Update colspan for footers
                 document.querySelector('.empty-row td').setAttribute('colspan', '7');
                 document.querySelector('.total-cell').setAttribute('colspan', '7');
             } else {
-                // Remove discount column
+                // Remove discount column if it exists
                 table.querySelectorAll('tr').forEach(row => {
-                    if (row.cells.length > 6) {
+                    if (row.cells.length === 7) {
                         row.deleteCell(-1);
                     }
                 });
                 
-                // Update colspan
+                // Update colspan for footers
                 document.querySelector('.empty-row td').setAttribute('colspan', '6');
                 document.querySelector('.total-cell').setAttribute('colspan', '6');
             }
