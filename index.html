@@ -241,7 +241,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
@@ -803,6 +803,7 @@
             const wb = XLSX.utils.book_new();
             const table = document.querySelector('table');
             const hasDiscountColumn = table.querySelector('thead tr th:last-child')?.textContent === 'Sleva';
+            const colCount = hasDiscountColumn ? 7 : 6;
             
             // Create document number
             const now = new Date();
@@ -814,22 +815,24 @@
                 minute: '2-digit'
             }).replace(/[. :]/g, '');
             
-            // Header rows with proper empty cells
-            const emptyColumns = hasDiscountColumn ? ['', '', '', '', '', '', ''] : ['', '', '', '', '', ''];
+            // Create empty array with correct length
+            const emptyRow = Array(colCount).fill('');
+            
+            // Header rows
             const headerRows = [
                 ['Dodací list/daňový doklad', '', '', '', '', '', 'č. ' + docNumber],
-                ['Datum zdanitelného plnění:', ...emptyColumns],
-                ['Odběratel:', ...emptyColumns],
-                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', ...emptyColumns],
-                ['Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', ...emptyColumns],
-                ['', ...emptyColumns],
-                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN', hasDiscountColumn ? 'Sleva' : '']
+                ['Datum zdanitelného plnění:', ...emptyRow.slice(1)],
+                ['Odběratel:', ...emptyRow.slice(1)],
+                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', ...emptyRow.slice(1)],
+                ['Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', ...emptyRow.slice(1)],
+                emptyRow,
+                ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN', hasDiscountColumn ? 'Sleva' : ''].filter(Boolean)
             ];
 
-            // Get table data
+            // Get table data including discounts
             const tableData = [];
             document.querySelectorAll("#product-table tr").forEach(row => {
-                const rowData = [
+                const data = [
                     row.cells[0].textContent.trim(),
                     row.cells[1].textContent.trim(),
                     row.cells[2].textContent.trim(),
@@ -839,29 +842,30 @@
                 ];
                 
                 if (hasDiscountColumn) {
-                    rowData.push(row.querySelector('.discount-value').textContent.trim());
+                    data.push(row.querySelector('.discount-value').textContent.trim());
                 }
                 
-                tableData.push(rowData);
+                tableData.push(data);
             });
 
-            // Add empty row and totals
-            tableData.push(emptyColumns);
-            
+            // Add empty row before totals
+            tableData.push(emptyRow);
+
             const totalPrice = document.getElementById('total-price').textContent;
             const totalVat = document.getElementById('total-vat').textContent;
             const totalWithVat = document.getElementById('total-with-vat').textContent;
 
-            // Add totals with proper alignment
+            // Create totals rows with correct alignment
             const totalRows = [
                 ['', '', '', 'Bez DPH:', '', '', totalPrice],
                 ['', '', '', 'DPH 21 %:', '', '', totalVat],
                 ['', '', '', 'Celkem:', '', '', totalWithVat]
-            ];
+            ].map(row => row.slice(0, colCount));
 
-            const ws = XLSX.utils.aoa_to_sheet([...headerRows, ...tableData, ...totalRows]);
+            const finalData = [...headerRows, ...tableData, ...totalRows];
+            const ws = XLSX.utils.aoa_to_sheet(finalData);
 
-            // Set column widths and alignments
+            // Set column widths
             ws['!cols'] = [
                 {wch: 3},  // Č.
                 {wch: 10}, // Int. kód
@@ -873,15 +877,14 @@
             ].filter(Boolean);
 
             // Set merge regions
-            const mergeRegions = [
+            ws['!merges'] = [
                 {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list
-                {s: {r: 1, c: 0}, e: {r: 1, c: hasDiscountColumn ? 6 : 5}}, // Datum
-                {s: {r: 2, c: 0}, e: {r: 2, c: hasDiscountColumn ? 6 : 5}}, // Odběratel
-                {s: {r: 3, c: 0}, e: {r: 3, c: hasDiscountColumn ? 6 : 5}}, // Dodavatel
-                {s: {r: 4, c: 0}, e: {r: 4, c: hasDiscountColumn ? 6 : 5}}, // Adresa
-                {s: {r: 5, c: 0}, e: {r: 5, c: hasDiscountColumn ? 6 : 5}}  // Prázdný řádek
+                {s: {r: 1, c: 0}, e: {r: 1, c: colCount - 1}}, // Datum
+                {s: {r: 2, c: 0}, e: {r: 2, c: colCount - 1}}, // Odběratel
+                {s: {r: 3, c: 0}, e: {r: 3, c: colCount - 1}}, // Dodavatel
+                {s: {r: 4, c: 0}, e: {r: 4, c: colCount - 1}}, // Adresa
+                {s: {r: 5, c: 0}, e: {r: 5, c: colCount - 1}}  // Prázdný řádek
             ];
-            ws['!merges'] = mergeRegions;
 
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             const fileName = `dodaci-list_${new Date().toLocaleDateString('cs-CZ').replace(/\s/g, '')}.xlsx`;
