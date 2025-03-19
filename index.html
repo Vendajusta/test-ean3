@@ -243,7 +243,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vybrameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
@@ -853,9 +853,9 @@
             // Součty
             data.push(Array(hasDiscountColumn ? 7 : 6).fill(''));
             const totalColumns = hasDiscountColumn ? 6 : 5;
-            data.push([...Array(totalColumns).fill(''), document.getElementById('total-price').textContent]);
-            data.push([...Array(totalColumns).fill(''), document.getElementById('total-vat').textContent]);
-            data.push([...Array(totalColumns).fill(''), document.getElementById('total-with-vat').textContent]);
+            data.push(['', '', '', 'Bez DPH:', '', document.getElementById('total-price').textContent]);
+            data.push(['', '', '', 'DPH 21 %:', '', document.getElementById('total-vat').textContent]);
+            data.push(['', '', '', 'Celkem:', '', document.getElementById('total-with-vat').textContent]);
 
             const ws = XLSX.utils.aoa_to_sheet(data);
 
@@ -871,8 +871,8 @@
             if (hasDiscountColumn) columns.push({wch: 8}); // Sleva
             ws['!cols'] = columns;
 
-            // Nastavení okrajů
-            ws['!margins'] = { left: 0.2, right: 0.2, top: 0.2, bottom: 0.2 };
+            // Nastavení okrajů - zmenšený pravý okraj
+            ws['!margins'] = { left: 0.2, right: 0.1, top: 0.2, bottom: 0.2 };
 
             // Sloučení buněk v hlavičce
             ws['!merges'] = [
