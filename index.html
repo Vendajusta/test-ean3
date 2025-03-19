@@ -243,7 +243,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vybrru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
@@ -804,37 +804,34 @@
         function exportTableToCSV() {
             const wb = XLSX.utils.book_new();
             
-            // Správná detekce sloupce slevy
+            // Detekce sloupce slevy
             const hasDiscountColumn = document.querySelector('table thead tr th:last-child')?.textContent === 'Sleva';
             const cols = hasDiscountColumn ? 7 : 6;
-            
-            // Vytvoření čísla dokumentu
-            const now = new Date();
-            const docNumber = now.getFullYear().toString().slice(-2) + 
-                now.toLocaleString('cs-CZ', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }).replace(/[. :]/g, '');
+            const docNumber = new Date().toLocaleString('cs-CZ', {
+                year: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).replace(/[. :]/g, '');
 
-            // Základní hlavičky
-            const mainHeaders = [
+            // 1. Hlavička dokumentu - první část
+            const headerPart1 = [
                 ['Dodací list/daňový doklad', '', '', '', '', hasDiscountColumn ? '' : undefined, 'č. ' + docNumber].slice(0, cols),
-                Array(cols).fill('').map((_, i) => i === 0 ? 'Datum zdanitelného plnění:' : ''),
-                Array(cols).fill('').map((_, i) => i === 0 ? 'Odběratel:' : ''),
-                Array(cols).fill('').map((_, i) => i === 0 ? 'Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo' : ''),
-                Array(cols).fill('').map((_, i) => i === 0 ? 'Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818' : ''),
-                Array(cols).fill(''),
+                ['Datum zdanitelného plnění:', ...Array(cols-1).fill('')],
+                ['Odběratel:', ...Array(cols-1).fill('')],
+                ['Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo', ...Array(cols-1).fill('')],
+                ['Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818', ...Array(cols-1).fill('')],
+                Array(cols).fill('')
             ];
 
-            // Hlavička tabulky
-            const tableHeaders = [['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN']];
-            if (hasDiscountColumn) tableHeaders[0].push('Sleva');
+            // 2. Hlavička tabulky
+            let tableHeaders = ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN'];
+            if (hasDiscountColumn) tableHeaders.push('Sleva');
 
-            // Data tabulky
-            const rows = Array.from(document.querySelectorAll("#product-table tr")).map(row => {
-                const base = [
+            // 3. Data z tabulky
+            const tableRows = Array.from(document.querySelectorAll("#product-table tr")).map(row => {
+                const baseData = [
                     row.cells[0].textContent.trim(),
                     row.cells[1].textContent.trim(),
                     row.cells[2].textContent.trim(),
@@ -844,38 +841,50 @@
                 ];
                 
                 if (hasDiscountColumn) {
-                    base.push(row.querySelector('.discount-value').textContent.trim());
+                    baseData.push(row.querySelector('.discount-value').textContent.trim());
                 }
                 
-                return base;
+                return baseData;
             });
 
-            // Prázdný řádek a součty
-            const summaryRows = [
+            // 4. Patička s výpočty
+            const footerRows = [
                 Array(cols).fill(''),
-                Array(cols).fill('').map((_, i) => i === 3 ? 'Bez DPH:' : i === cols-1 ? document.getElementById('total-price').textContent : ''),
-                Array(cols).fill('').map((_, i) => i === 3 ? 'DPH 21 %:' : i === cols-1 ? document.getElementById('total-vat').textContent : ''),
-                Array(cols).fill('').map((_, i) => i === 3 ? 'Celkem:' : i === cols-1 ? document.getElementById('total-with-vat').textContent : '')
+                Array(cols).fill('').map((_, i) => {
+                    if (i === 3) return 'Bez DPH:';
+                    if (i === cols-1) return document.getElementById('total-price').textContent;
+                    return '';
+                }),
+                Array(cols).fill('').map((_, i) => {
+                    if (i === 3) return 'DPH 21 %:';
+                    if (i === cols-1) return document.getElementById('total-vat').textContent;
+                    return '';
+                }),
+                Array(cols).fill('').map((_, i) => {
+                    if (i === 3) return 'Celkem:';
+                    if (i === cols-1) return document.getElementById('total-with-vat').textContent;
+                    return '';
+                })
             ];
 
-            const ws = XLSX.utils.aoa_to_sheet([...mainHeaders, ...tableHeaders, ...rows, ...summaryRows]);
+            // 5. Sestavení Excel sheetu
+            const allRows = [...headerPart1, tableHeaders, ...tableRows, ...footerRows];
+            const ws = XLSX.utils.aoa_to_sheet(allRows);
 
-            // Nastavení šířek sloupců
-            const baseColumns = [
-                {wch: 3},  // Č.
-                {wch: 10}, // Int. kód
-                {wch: 35}, // Název/Položky
-                {wch: 8},  // Množství
-                {wch: 10}, // Cena
-                {wch: 13}, // EAN
+            // 6. Nastavení šířek sloupců
+            ws['!cols'] = [
+                {wch: 3},     // P.č.
+                {wch: 10},    // KÓD
+                {wch: 35},    // Položky
+                {wch: 8},     // Množství
+                {wch: 10},    // Jedn.cena
+                {wch: 13},    // EAN
+                ...(hasDiscountColumn ? [{wch: 8}] : []) // Sleva (jen když je aktivní)
             ];
-            if (hasDiscountColumn) baseColumns.push({wch: 8}); // Sleva
-            ws['!cols'] = baseColumns;
 
-            ws['!margins'] = { left: 0.2, right: 0.2, top: 0.2, bottom: 0.2 };
-
+            // 7. Sloučení buněk a okraje
             ws['!merges'] = [
-                {s: {r: 0, c: 0}, e: {r: 0, c: 2}},  // Dodací list
+                {s: {r: 0, c: 0}, e: {r: 0, c: 2}}, // Dodací list
                 {s: {r: 1, c: 0}, e: {r: 1, c: cols-1}},
                 {s: {r: 2, c: 0}, e: {r: 2, c: cols-1}},
                 {s: {r: 3, c: 0}, e: {r: 3, c: cols-1}},
@@ -883,6 +892,9 @@
                 {s: {r: 5, c: 0}, e: {r: 5, c: cols-1}}
             ];
 
+            ws['!margins'] = { left: 0.2, right: 0.2, top: 0.2, bottom: 0.2 };
+
+            // 8. Export
             XLSX.utils.book_append_sheet(wb, ws, "Sklad");
             XLSX.writeFile(wb, `dodaci-list_${docNumber}.xlsx`);
         }
