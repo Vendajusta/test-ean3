@@ -241,7 +241,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vybrameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
@@ -602,10 +602,9 @@
             const product = database[code];
             const table = document.getElementById("product-table");
             const rowCount = table.getElementsByTagName("tr").length + 1;
-            // Check for discount column by counting thead cells instead
-            const hasDiscountColumn = document.querySelectorAll('table thead tr th').length === 7;
+            const hasDiscountColumn = document.querySelector('table thead tr').cells.length > 6;
             
-            let row = document.createElement('tr');
+            const row = table.insertRow();
             row.innerHTML = `
                 <td>${rowCount}</td>
                 <td>${product ? product.intCode : '-'}</td>
@@ -932,19 +931,20 @@
         function toggleDiscountColumn() {
             const table = document.querySelector('table');
             const headerRow = table.querySelector('thead tr');
-            const hasDiscountColumn = headerRow.querySelector('th:last-child')?.textContent === 'Sleva';
-
-            // Prevent toggling if we're trying to add a second discount column
-            if (!hasDiscountColumn && headerRow.cells.length >= 7) {
-                console.log('Discount column already exists');
-                return;
-            }
+            const currentColumns = headerRow.cells.length;
             
-            if (!hasDiscountColumn) {
-                // Add header
+            // Prevent adding if discount column already exists
+            if (currentColumns >= 7) {
+                if (headerRow.cells[6].textContent !== 'Sleva') {
+                    headerRow.cells[6].textContent = 'Sleva';
+                } else {
+                    return; // Already has discount column
+                }
+            } else {
+                // Add header for discount
                 headerRow.insertCell().textContent = 'Sleva';
                 
-                // Add column to existing rows
+                // Add discount column to all existing rows
                 document.querySelectorAll('#product-table tr').forEach(row => {
                     const cell = row.insertCell();
                     cell.innerHTML = `
@@ -953,22 +953,12 @@
                             <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
                         </div>`;
                 });
-
+                
                 // Update colspan for footers
                 document.querySelector('.empty-row td').setAttribute('colspan', '7');
                 document.querySelector('.total-cell').setAttribute('colspan', '7');
-            } else {
-                // Remove discount column if it exists
-                table.querySelectorAll('tr').forEach(row => {
-                    if (row.cells.length === 7) {
-                        row.deleteCell(-1);
-                    }
-                });
-                
-                // Update colspan for footers
-                document.querySelector('.empty-row td').setAttribute('colspan', '6');
-                document.querySelector('.total-cell').setAttribute('colspan', '6');
             }
+            
             calculateTotals();
             saveTableToStorage();
         }
