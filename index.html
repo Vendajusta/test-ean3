@@ -259,7 +259,7 @@
             }
         }
         .print-only {
-            display: none;
+            display: none !important;  /* Úplně skryjeme původní hlavičku */
         }
         .print-header {
             margin: 20px 0;
@@ -299,8 +299,9 @@
             display: none !important;
         }
         .preview-mode .table-container {
-            padding: 20px;
+            padding: 10px !important;  /* Zmenšené okraje */
             max-width: 100%;
+            font-size: 12pt;  /* Jednotná velikost písma */
         }
         .preview-back-button {
             position: fixed;
@@ -313,6 +314,16 @@
             padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
+        }
+        .preview-header {
+            font-size: 12pt;
+            margin-bottom: 20px;
+        }
+
+        .preview-header h1 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 0 0 10px 0;
         }
     </style>
 </head>
@@ -1060,21 +1071,22 @@
 
             // Vytvořit hlavičku dodacího listu
             const previewHeader = document.createElement('div');
-            previewHeader.style.padding = '20px';
-            previewHeader.style.maxWidth = '900px';
-            previewHeader.style.margin = '0 auto';
+            previewHeader.className = 'preview-header';
             previewHeader.innerHTML = `
-                <h1 style="margin-bottom: 20px;">Dodací list/daňový doklad č. ${docNumber}</h1>
-                <div style="margin-bottom: 20px;">
-                    <div>Datum zdanitelného plnění: ${now.toLocaleDateString('cs-CZ')}</div>
-                    <div>Odběratel:</div>
-                    <div>Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo</div>
-                    <div>Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818</div>
-                </div>
+                <h1>DODACÍ LIST/DAŇOVÝ DOKLAD č. ${docNumber}</h1>
+                <div>Datum zdanitelného plnění: ${now.toLocaleDateString('cs-CZ')}</div>
+                <div>Odběratel:</div>
+                <div>Dodavatel: PETR KMENTA - VELKOOBCHOD PORCELÁN A SKLO</div>
+                <div>Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818</div>
             `;
 
-            // Vložit hlavičku před tabulku
+            // Přidáme hlavičku a upravíme okraje tabulky
+            document.querySelector('.table-container').style.padding = '0 10px';
             document.querySelector('.table-container').insertBefore(previewHeader, document.querySelector('table'));
+
+            // Skryjeme původní hlavičku pokud existuje
+            const oldHeader = document.querySelector('.print-header');
+            if (oldHeader) oldHeader.style.display = 'none';
 
             // Přidat třídu non-preview všem elementům, které chceme skrýt
             document.querySelectorAll('button:not(.preview-back-button), #reader, #debug-info, select, .edit-qty-btn, .edit-price-btn, .edit-discount-btn, .delete-btn').forEach(el => {
