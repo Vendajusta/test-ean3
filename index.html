@@ -238,20 +238,56 @@
             font-size: 20px;
             color: #ff4444;
         }
+        @media print {
+            button, #reader, #debug-info, select, .edit-qty-btn, .edit-price-btn, 
+            .edit-discount-btn, .delete-btn {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                padding: 0;
+                margin: 0;
+                font-size: 12pt;
+            }
+            .quantity-value, .price-value, .discount-value {
+                font-size: inherit;
+            }
+            .print-header {
+                margin-bottom: 20px;
+            }
+        }
+        .print-only {
+            display: none;
+        }
+        .print-header {
+            margin: 20px 0;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrat kameru</button>
+        <button onclick="listCameras()">Vybrameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
+        <button onclick="showPrintView()" style="margin-left: 10px;">Náhled tisku</button>
         <select id="cameras" style="display: none;" onchange="startScannerWithCamera(this.value)">
             <option value="">Vyberte kameru...</option>
         </select>
         <button onclick="stopScanner()" id="stop-button" style="display: none;">Ukončit skenování</button>
     </div>
     <div id="reader"></div>
+    <div class="print-only print-header">
+        <h1>Dodací list/daňový doklad</h1>
+        <div id="print-doc-number"></div>
+        <div>Datum zdanitelného plnění: <span id="print-date"></span></div>
+        <div>Odběratel:</div>
+        <div>Dodavatel: Petr KMENTA - Velkoobchod porcelán a sklo</div>
+        <div>Kateřinská 4190/5, 695 01 Hodonín, DIČ: CZ7409164312, IČ: 01542818</div>
+    </div>
     <div class="table-container">
         <table>
             <thead>
@@ -946,6 +982,23 @@
                     addProduct('', name, quantity, price); // Pass the price to addProduct
                 }
             }
+        }
+
+        function showPrintView() {
+            // Nastavíme číslo dokumentu a datum
+            const now = new Date();
+            const docNumber = 
+                now.getFullYear().toString().slice(-2) + 
+                ('0' + (now.getMonth() + 1)).slice(-2) + 
+                ('0' + now.getDate()).slice(-2) +
+                ('0' + now.getHours()).slice(-2) + 
+                ('0' + now.getMinutes()).slice(-2);
+            
+            document.getElementById('print-doc-number').textContent = 'č. ' + docNumber;
+            document.getElementById('print-date').textContent = now.toLocaleDateString('cs-CZ');
+            
+            // Otevřeme tiskový dialog
+            window.print();
         }
 
         window.addEventListener('load', () => {
