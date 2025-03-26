@@ -36,7 +36,7 @@
             margin-top: 10px;
             min-width: 600px;
             max-width: 980px; /* Zvětšeno z 900px pro využití prostoru */
-            margin: 10px 5px; /* Zmenšeno z 10px auto */
+            margin: 10px 2px; /* Zmenšeno z 10px 5px */
             border: none;
             font-size: 16px; /* Zmenšeno z 20px */
         }
@@ -305,7 +305,7 @@
             display: none !important;
         }
         .preview-mode .table-container {
-            padding: 5px !important;  /* Zmenšeno z 10px */
+            padding: 2px !important;  /* Zmenšeno z 5px */
             max-width: 100%;
             font-size: 12pt;  /* Jednotná velikost písma */
         }
@@ -341,6 +341,9 @@
         /* Odstranění duplicitního podtržení */
         td .price-container, td .discount-container {
             border-bottom: none;
+        }
+        td[onclick], td .price-value, td .discount-price {
+            border-bottom: 1px solid #ddd;
         }
     </style>
 </head>
@@ -1018,7 +1021,8 @@
                 ];
 
                 if (hasDiscountColumn) {
-                    rowData.push(row.querySelector('.discount-value').textContent.trim());
+                    // Změnit na .discount-price místo .discount-value
+                    rowData.push(row.querySelector('.discount-price').textContent.trim());
                 }
 
                 data.push(rowData);
