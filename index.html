@@ -11,7 +11,7 @@
             max-width: 1000px;
             margin: 0 auto;
             padding: 15px;
-            font-size: 18px; /* Základní velikost písma */
+            font-size: 16px; /* Zmenšeno z 18px */
         }
         h2 {
             font-size: 32px; /* Větší nadpis */
@@ -38,7 +38,7 @@
             max-width: 900px;
             margin: 10px auto;
             border: none;
-            font-size: 20px; /* Větší text v tabulce */
+            font-size: 16px; /* Zmenšeno z 20px */
         }
         th, td { 
             border: none;
@@ -62,7 +62,7 @@
         }
         th {
             border-bottom: 2px solid #000;
-            font-size: 22px; /* Ještě větší text v hlavičce */
+            font-size: 18px; /* Zmenšeno z 22px */
         }
         .summary-row {
             font-weight: bold;
@@ -152,7 +152,7 @@
         }
         /* Větší text pro množství a cenu */
         .quantity-value, .price-value {
-            font-size: 20px;
+            font-size: 16px; /* Zmenšeno z 20px */
         }
         .edit-name-btn {
             background-color: #4CAF50;
@@ -326,8 +326,11 @@
             margin: 0 0 10px 0;
         }
         .discount-price {
-            color: #ff4444;
-            font-size: 20px;
+            color: inherit; /* Změní barvu na černou (zdědí od rodiče) */
+            font-size: inherit; /* Zdědí velikost písma */
+        }
+        .preview-mode h2 {
+            display: none; /* Skryjeme nadpis "Skladový skener" v náhledu */
         }
     </style>
 </head>
@@ -1090,6 +1093,7 @@
             // Vytvořit hlavičku dodacího listu
             const previewHeader = document.createElement('div');
             previewHeader.className = 'preview-header';
+            previewHeader.style.padding = '20px 10px'; // Upravené odsazení hlavičky
             previewHeader.innerHTML = `
                 <h1>DODACÍ LIST/DAŇOVÝ DOKLAD č. ${docNumber}</h1>
                 <div>Datum zdanitelného plnění: ${now.toLocaleDateString('cs-CZ')}</div>
