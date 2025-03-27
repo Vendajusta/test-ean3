@@ -354,7 +354,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrameru</button>
+        <button onclick="listCameras()">Vru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <button onclick="showPrintView()" style="margin-left: 10px;">Náhled tisku</button>
@@ -380,7 +380,8 @@
                     <th>Int. kód</th>
                     <th>Název</th>
                     <th>MJ</th>
-                    <th>Cena</th>
+                    <th>Jedn.cena</th>
+                    <th>Celková cena bez DPH</th>
                     <th>EAN</th>
                 </tr>
             </thead>
@@ -701,6 +702,9 @@
                                 </div>
                             </td>
                             <td>
+                                <span class="total-price">${(parseFloat(item.price.replace(',', '.').replace(/[^\d.]/g, '') || 0) * parseInt(item.quantity.replace(/[^\d]/g, '') || 0)).toFixed(2).replace('.', ',')} Kč</span>
+                            </td>
+                            <td>
                                 <div class="actions-container">
                                     <span>${savedEan}</span>
                                     <button class="delete-btn" onclick="deleteRow(this)">×</button>
@@ -730,18 +734,10 @@
             const product = database[code];
             const table = document.getElementById("product-table");
             const rowCount = table.getElementsByTagName("tr").length + 1;
-            const hasDiscountColumn = document.querySelector('table thead tr').cells.length > 6;
+            const hasDiscountColumn = document.querySelector('table thead tr').cells.length > 7;
             const discount = hasDiscountColumn ? parseInt(document.querySelector('#product-table tr:last-child .discount-value')?.textContent || '0') : 0;
             const originalPrice = product ? parseFloat(formatPrice(product.price).replace(',', '.')) : parseFloat(formatPrice(price || '0').replace(',', '.'));
             const discountedPrice = originalPrice * (1 - discount / 100);
-            
-            // Přidat sloupec celkové ceny pokud neexistuje
-            if (!document.querySelector('table thead tr th:last-child').textContent.includes('Celková cena')) {
-                document.querySelector('table thead tr').insertCell().textContent = 'Celková cena bez DPH';
-                document.querySelector('.empty-row td').setAttribute('colspan', '7');
-                document.querySelector('.total-cell').setAttribute('colspan', '7');
-            }
-            
             const totalPrice = discountedPrice * parseInt(quantity);
             
             const row = table.insertRow();
@@ -762,20 +758,13 @@
                     </div>
                 </td>
                 <td>
+                    <span class="total-price">${totalPrice.toFixed(2).replace('.', ',')} Kč</span>
+                </td>
+                <td>
                     <div class="actions-container">
                         <span>${code ? code + (!product ? ' !' : '') : ''}</span>
                         <button class="delete-btn" onclick="deleteRow(this)">×</button>
                     </div>
-                </td>
-                ${hasDiscountColumn ? `
-                <td>
-                    <div class="price-container">
-                        <span class="discount-price">${discountedPrice.toFixed(2).replace('.', ',')} Kč</span>
-                        <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
-                    </div>
-                </td>` : ''}
-                <td>
-                    <span class="total-price">${totalPrice.toFixed(2).replace('.', ',')} Kč</span>
                 </td>`;
             
             table.appendChild(row);
@@ -1031,8 +1020,9 @@
             data.push(Array(hasDiscountColumn ? 7 : 6).fill(''));
 
             // Hlavička tabulky
-            let headers = ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'EAN'];
+            let headers = ['P.č.', 'KÓD', 'Položky', 'Množství', 'Jedn.cena', 'Celková cena bez DPH'];
             if (hasDiscountColumn) headers.push('Sleva');
+            headers.push('EAN');
             data.push(headers);
 
             // Data položek
@@ -1043,7 +1033,7 @@
                     row.cells[2].textContent.trim(),
                     row.querySelector('.quantity-value').textContent.trim(),
                     row.querySelector('.price-value').textContent.trim(),
-                    row.querySelector('.actions-container span').textContent.trim()
+                    row.querySelector('.total-price').textContent.trim()
                 ];
 
                 if (hasDiscountColumn) {
@@ -1051,6 +1041,7 @@
                     rowData.push(row.querySelector('.discount-price').textContent.trim());
                 }
 
+                rowData.push(row.querySelector('.actions-container span').textContent.trim());
                 data.push(rowData);
             });
 
