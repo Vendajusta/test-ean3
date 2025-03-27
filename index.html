@@ -354,7 +354,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vru</button>
+        <button onclick="listCameras()">Vybrameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <button onclick="showPrintView()" style="margin-left: 10px;">Náhled tisku</button>
@@ -765,7 +765,14 @@
                         <span>${code ? code + (!product ? ' !' : '') : ''}</span>
                         <button class="delete-btn" onclick="deleteRow(this)">×</button>
                     </div>
-                </td>`;
+                </td>
+                ${hasDiscountColumn ? `
+                <td>
+                    <div class="discount-container">
+                        <span class="discount-value">${discount}%</span>
+                        <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
+                    </div>
+                </td>` : ''}`;
             
             table.appendChild(row);
             calculateTotals();
