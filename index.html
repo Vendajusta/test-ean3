@@ -345,12 +345,16 @@
         td[onclick], td .price-value, td .discount-price {
             border-bottom: 1px solid #ddd;
         }
+        .discount-column {
+            color: #ff4444;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vameru</button>
+        <button onclick="listCameras()">Vybrameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <button onclick="showPrintView()" style="margin-left: 10px;">Náhled tisku</button>
@@ -885,18 +889,22 @@
         }
 
         async function editDiscount(button) {
-            const priceSpan = button.previousElementSibling;
+            const discountSpan = button.previousElementSibling;
             const row = button.closest('tr');
-            const originalPrice = parseFloat(row.querySelector('.price-value').textContent.replace(',', '.').replace(/[^\d.]/g, '') || 0);
-            const currentDiscountedPrice = parseFloat(priceSpan.textContent.replace(',', '.').replace(/[^\d.]/g, '') || 0);
-            const currentDiscount = Math.round((1 - currentDiscountedPrice / originalPrice) * 100);
+            const currentDiscount = parseInt(discountSpan.textContent) || 0;
             
             const newDiscount = await customPrompt('Zadejte slevu v procentech (0-100):', currentDiscount.toString());
             
             if (newDiscount !== null && newDiscount.trim() !== '') {
                 const discount = Math.min(100, Math.max(0, parseInt(newDiscount) || 0));
+                const originalPrice = parseFloat(row.querySelector('.price-value').textContent.replace(',', '.').replace(/[^\d.]/g, '') || 0);
+                const quantity = parseInt(row.querySelector('.quantity-value').textContent.replace(/[^\d]/g, '') || 0);
                 const discountedPrice = originalPrice * (1 - discount / 100);
-                priceSpan.textContent = `${discountedPrice.toFixed(2).replace('.', ',')} Kč`;
+                const totalPrice = discountedPrice * quantity;
+                
+                discountSpan.textContent = `${discount}%`;
+                row.querySelector('.total-price').textContent = `${totalPrice.toFixed(2).replace('.', ',')} Kč`;
+                
                 calculateTotals();
                 saveTableToStorage();
             }
@@ -908,11 +916,12 @@
             const currentColumns = headerRow.cells.length;
             const toggleButton = document.querySelector('button[onclick="toggleDiscountColumn()"]');
             
-            if (currentColumns >= 7) { // Změněno na 7 (jen jeden sloupec pro cenu po slevě)
-                // Odstraníme sloupec cen po slevě
+            if (currentColumns >= 8) { // Změněno na 8 (sleva + celková cena)
+                // Odstraníme sloupce
                 document.querySelectorAll('table tr').forEach(row => {
-                    if (row.cells.length >= 7) {
-                        row.deleteCell(6);
+                    if (row.cells.length >= 8) {
+                        row.deleteCell(7); // Celková cena
+                        row.deleteCell(6); // Sleva
                     }
                 });
                 
@@ -920,31 +929,39 @@
                 document.querySelector('.total-cell').setAttribute('colspan', '6');
                 toggleButton.textContent = 'Přidat slevy';
             } else {
-                // Přidáme dialog pro zadání globální slevy
                 customPrompt('Zadejte slevu v procentech (0-100):', '0').then(globalDiscount => {
                     if (globalDiscount === null) return;
                     
                     const discount = Math.min(100, Math.max(0, parseInt(globalDiscount) || 0));
                     
-                    // Přidáme sloupec pro cenu po slevě
-                    headerRow.insertCell().textContent = 'Cena po slevě';
+                    // Přidáme sloupec pro slevu
+                    headerRow.insertCell().textContent = 'Sleva';
+                    // Přidáme sloupec pro celkovou cenu
+                    headerRow.insertCell().textContent = 'Cena celkem';
                     
-                    // Přidáme sloupec ke všem řádkům
+                    // Přidáme sloupce ke všem řádkům
                     document.querySelectorAll('#product-table tr').forEach(row => {
                         const originalPrice = parseFloat(row.querySelector('.price-value').textContent.replace(',', '.').replace(/[^\d.]/g, '') || 0);
+                        const quantity = parseInt(row.querySelector('.quantity-value').textContent.replace(/[^\d]/g, '') || 0);
                         const discountedPrice = originalPrice * (1 - discount / 100);
+                        const totalPrice = discountedPrice * quantity;
                         
-                        // Sloupec ceny po slevě
-                        const priceCell = row.insertCell();
-                        priceCell.innerHTML = `
-                            <div class="price-container">
-                                <span class="discount-price">${discountedPrice.toFixed(2).replace('.', ',')} Kč</span>
+                        // Sloupec slevy
+                        const discountCell = row.insertCell();
+                        discountCell.className = 'discount-column';
+                        discountCell.innerHTML = `
+                            <div class="discount-container">
+                                <span class="discount-value">${discount}%</span>
                                 <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
                             </div>`;
+                        
+                        // Sloupec celkové ceny
+                        const totalCell = row.insertCell();
+                        totalCell.innerHTML = `<span class="total-price">${totalPrice.toFixed(2).replace('.', ',')} Kč</span>`;
                     });
                     
-                    document.querySelector('.empty-row td').setAttribute('colspan', '7');
-                    document.querySelector('.total-cell').setAttribute('colspan', '7');
+                    document.querySelector('.empty-row td').setAttribute('colspan', '8');
+                    document.querySelector('.total-cell').setAttribute('colspan', '8');
                     toggleButton.textContent = 'Odebrat slevy';
                     
                     calculateTotals();
@@ -957,25 +974,18 @@
         function calculateTotals() {
             let totalPrice = 0;
             document.querySelectorAll("#product-table tr").forEach(row => {
-                const quantityText = row.querySelector('.quantity-value').textContent;
-                const quantity = parseInt(quantityText.replace(/[^\d]/g, '') || 0);
-                
-                // Pokud existuje cena po slevě, použijeme ji, jinak použijeme původní cenu
-                const discountPrice = row.querySelector('.discount-price');
-                let price;
-                
-                if (discountPrice) {
-                    // Použít cenu po slevě
-                    price = parseFloat(discountPrice.textContent.replace(',', '.').replace(/[^\d.]/g, '') || 0);
+                const totalPriceEl = row.querySelector('.total-price');
+                if (totalPriceEl) {
+                    // Použijeme přímo celkovou cenu řádku
+                    totalPrice += parseFloat(totalPriceEl.textContent.replace(',', '.').replace(/[^\d.]/g, '') || 0);
                 } else {
-                    // Použít původní cenu
+                    // Použijeme původní cenu * množství
                     const priceText = row.querySelector('.price-value').textContent;
-                    price = parseFloat(priceText.replace(',', '.').replace(/[^\d.]/g, '') || 0);
+                    const quantityText = row.querySelector('.quantity-value').textContent;
+                    const price = parseFloat(priceText.replace(',', '.').replace(/[^\d.]/g, '') || 0);
+                    const quantity = parseInt(quantityText.replace(/[^\d]/g, '') || 0);
+                    totalPrice += price * quantity;
                 }
-                
-                // Vypočítáme cenu za řádek (už obsahuje slevu, pokud existuje)
-                const rowTotal = price * quantity;
-                totalPrice += rowTotal;
             });
 
             const vat = totalPrice * 0.21;
