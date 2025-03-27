@@ -354,7 +354,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vyzzbru</button>
+        <button onclick="listCameras()">Vybrameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <button onclick="showPrintView()" style="margin-left: 10px;">Náhled tisku</button>
@@ -701,20 +701,20 @@
                                     <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
                                 </div>
                             </td>
-                            <td><span class="total-price">${totalPrice.toFixed(2).replace('.', ',')} Kč</span></td>
+                            <td><span class="total-price">${calculateRowTotal(item)}</span></td>
+                            ${hasDiscount ? `
+                            <td class="discount-column">
+                                <div class="discount-container">
+                                    <span class="discount-value">${item.discount || '0%'}</span>
+                                    <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
+                                </div>
+                            </td>` : ''}
                             <td>
                                 <div class="actions-container">
                                     <span>${savedEan}</span>
                                     <button class="delete-btn" onclick="deleteRow(this)">×</button>
                                 </div>
                             </td>
-                            ${hasDiscount ? `
-                            <td>
-                                <div class="discount-container">
-                                    <span class="discount-value">${item.discount || '0%'}</span>
-                                    <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
-                                </div>
-                            </td>` : ''}
                         </tr>`;
                     table.innerHTML += row;
                 });
@@ -764,21 +764,18 @@
                     </div>
                 </td>
                 <td><span class="total-price">${totalPrice.toFixed(2).replace('.', ',')} Kč</span></td>
+                ${hasDiscountColumn ? `
+                <td class="discount-column">
+                    <div class="discount-container">
+                        <span class="discount-value">${discount}%</span>
+                        <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
+                    </div>
+                </td>` : ''}
                 <td>
                     <div class="actions-container">
                         <span>${code ? code + (!product ? ' !' : '') : ''}</span>
                         <button class="delete-btn" onclick="deleteRow(this)">×</button>
                     </div>
-                </td>
-                ${hasDiscountColumn ? `
-                <td>
-                    <div class="price-container">
-                        <span class="discount-price">${discountedPrice.toFixed(2).replace('.', ',')} Kč</span>
-                        <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
-                    </div>
-                </td>` : ''}
-                <td>
-                    <span class="total-price">${totalPrice.toFixed(2).replace('.', ',')} Kč</span>
                 </td>`;
             
             table.appendChild(row);
@@ -1164,6 +1161,15 @@
             document.querySelectorAll('button:not(.preview-back-button), #reader, #debug-info, select, .edit-qty-btn, .edit-price-btn, .edit-discount-btn, .delete-btn').forEach(el => {
                 el.classList.add('non-preview');
             });
+        }
+
+        function calculateRowTotal(item) {
+            const price = parseFloat(item.price.replace(',', '.').replace(/[^\d.]/g, '') || 0);
+            const quantity = parseInt(item.quantity.replace(/[^\d]/g, '') || 0);
+            const discount = parseInt(item.discount) || 0;
+            const discountedPrice = price * (1 - discount / 100);
+            const total = discountedPrice * quantity;
+            return total.toFixed(2).replace('.', ',') + ' Kč';
         }
 
         window.addEventListener('load', () => {
