@@ -350,7 +350,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrameru</button>
+        <button onclick="listCameras()">Vameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <button onclick="showPrintView()" style="margin-left: 10px;">Náhled tisku</button>
@@ -957,16 +957,24 @@
         function calculateTotals() {
             let totalPrice = 0;
             document.querySelectorAll("#product-table tr").forEach(row => {
-                const priceText = row.querySelector('.price-value').textContent;
                 const quantityText = row.querySelector('.quantity-value').textContent;
-                const discountEl = row.querySelector('.discount-value');
-                
-                const price = parseFloat(priceText.replace(',', '.').replace(/[^\d.]/g, '') || 0);
                 const quantity = parseInt(quantityText.replace(/[^\d]/g, '') || 0);
-                const discount = discountEl ? parseInt(discountEl.textContent) || 0 : 0;
                 
-                // Vypočítáme cenu za řádek včetně slevy
-                const rowTotal = price * quantity * (1 - discount / 100);
+                // Pokud existuje cena po slevě, použijeme ji, jinak použijeme původní cenu
+                const discountPrice = row.querySelector('.discount-price');
+                let price;
+                
+                if (discountPrice) {
+                    // Použít cenu po slevě
+                    price = parseFloat(discountPrice.textContent.replace(',', '.').replace(/[^\d.]/g, '') || 0);
+                } else {
+                    // Použít původní cenu
+                    const priceText = row.querySelector('.price-value').textContent;
+                    price = parseFloat(priceText.replace(',', '.').replace(/[^\d.]/g, '') || 0);
+                }
+                
+                // Vypočítáme cenu za řádek (už obsahuje slevu, pokud existuje)
+                const rowTotal = price * quantity;
                 totalPrice += rowTotal;
             });
 
