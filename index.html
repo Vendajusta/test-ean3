@@ -11,18 +11,18 @@
             max-width: 1000px;
             margin: 0 auto;
             padding: 15px;
-            font-size: 16px; /* Zmenšeno z 18px */
+            font-size: 14px; /* Zmenšeno z 16px */
         }
         h2 {
             font-size: 32px; /* Větší nadpis */
             margin-bottom: 20px;
         }
         button {
-            font-size: 18px; /* Větší text tlačítek */
+            font-size: 14px; /* Zmenšeno z 18px */
             padding: 8px 16px;
         }
         select {
-            font-size: 18px; /* Větší text v select boxu */
+            font-size: 14px; /* Zmenšeno z 18px */
             padding: 8px;
         }
         #reader {
@@ -38,7 +38,7 @@
             max-width: 980px; /* Zvětšeno z 900px pro využití prostoru */
             margin: 10px 2px; /* Zmenšeno z 10px 5px */
             border: none;
-            font-size: 16px; /* Zmenšeno z 20px */
+            font-size: 14px; /* Zmenšeno z 16px */
         }
         th, td { 
             border: none;
@@ -66,7 +66,7 @@
         }
         th {
             border-bottom: 2px solid #000;
-            font-size: 18px; /* Zmenšeno z 22px */
+            font-size: 16px; /* Zmenšeno z 18px */
             font-weight: bold; /* Přidáno pro všechny th elementy */
         }
         .summary-row {
@@ -158,7 +158,7 @@
         }
         /* Větší text pro množství a cenu */
         .quantity-value, .price-value {
-            font-size: 16px; /* Zmenšeno z 20px */
+            font-size: 14px; /* Zmenšeno z 16px */
         }
         .edit-name-btn {
             background-color: #4CAF50;
@@ -242,7 +242,7 @@
             border-bottom: 1px solid #ddd;
         }
         .discount-value {
-            font-size: 20px;
+            font-size: 16px; /* Zmenšeno z 20px */
         }
         @media print {
             button, #reader, #debug-info, select, .edit-qty-btn, .edit-price-btn, 
@@ -938,7 +938,7 @@
                     
                     document.querySelectorAll('#product-table tr').forEach(row => {
                         const originalPrice = parseFloat(row.querySelector('.price-value').textContent.replace(',', '.').replace(/[^\d.]/g, '') || 0);
-                        const quantity = parseInt(row.querySelector('.quantity-value').textContent.replace(/[^\d]/g, '') || 0);
+                        const quantity = parseInt(row.querySelector('.quantity-value').textContent.replace(/[^\d.]/g, '') || 0);
                         const discountedPrice = originalPrice * (1 - discount / 100);
                         
                         // Vložíme sloupec slevy před EAN
