@@ -484,15 +484,38 @@
                 const cameras = await Html5Qrcode.getCameras();
                 const select = document.getElementById('cameras');
                 
+                // Seřadíme kamery - preferujeme normální kameru před širokoúhlou
+                cameras.sort((a, b) => {
+                    const aIsWide = a.label.toLowerCase().includes('wide') || a.label.toLowerCase().includes('široký');
+                    const bIsWide = b.label.toLowerCase().includes('wide') || b.label.toLowerCase().includes('široký');
+                    
+                    if (aIsWide && !bIsWide) return 1;
+                    if (!aIsWide && bIsWide) return -1;
+                    return 0;
+                });
+                
                 select.innerHTML = '<option value="">Vyberte kameru...</option>';
-                cameras.forEach(camera => {
+                cameras.forEach((camera, index) => {
                     const option = document.createElement('option');
                     option.value = camera.id;
-                    option.text = camera.label;
+                    // Přidáme informaci o typu kamery do názvu
+                    const isWide = camera.label.toLowerCase().includes('wide') || camera.label.toLowerCase().includes('široký');
+                    option.text = `${camera.label} ${isWide ? '(širokoúhlá)' : '(normální)'}`;
+                    if (!isWide) option.selected = true; // Automaticky vybereme první normální kameru
                     select.appendChild(option);
                 });
                 
                 select.style.display = 'block';
+                
+                // Automaticky spustíme první normální kameru
+                const firstNormalCamera = cameras.find(c => 
+                    !c.label.toLowerCase().includes('wide') && 
+                    !c.label.toLowerCase().includes('široký')
+                );
+                if (firstNormalCamera) {
+                    startScannerWithCamera(firstNormalCamera.id);
+                }
+                
                 console.log('Dostupné kamery:', cameras);
             } catch (err) {
                 alert('Chyba při hledání kamer: ' + err);
