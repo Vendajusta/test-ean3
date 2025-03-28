@@ -350,7 +350,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybr</button>
+        <button onclick="listCameras()">Vybrameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <button onclick="showPrintView()" style="margin-left: 10px;">Náhled tisku</button>
@@ -377,6 +377,7 @@
                     <th>Název</th>
                     <th>MJ</th>
                     <th>Jedn.cena</th>
+                    <th>Sleva</th>
                     <th>Celková cena bez DPH</th>
                     <th>EAN</th>
                 </tr>
@@ -389,7 +390,7 @@
                 <tr class="summary-row">
                     <td colspan="7" class="total-cell">
                         součet: <span id="total-price">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
-                        DPH 21%: <span id="total-vat">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
+                        DPH: <span id="total-vat">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
                         celkem: <span id="total-with-vat">0,00 Kč</span>
                     </td>
                 </tr>
@@ -669,7 +670,7 @@
                 const hasDiscount = tableData.some(item => item.discount && item.discount !== '0%');
                 if (hasDiscount) {
                     const headerRow = document.querySelector('table thead tr');
-                    headerRow.insertCell().textContent = 'Sleva';
+                    headerRow.insertCell(5).textContent = 'Sleva';
                     
                     // Update colspan for footer rows
                     document.querySelector('.empty-row td').setAttribute('colspan', '7');
@@ -697,6 +698,13 @@
                                     <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
                                 </div>
                             </td>
+                            ${hasDiscount ? `
+                            <td>
+                                <div class="discount-container">
+                                    <span class="discount-value">${item.discount || '0%'}</span>
+                                    <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
+                                </div>
+                            </td>` : ''}
                             <td>
                                 <span class="total-price">${(parseFloat(item.price.replace(',', '.').replace(/[^\d.]/g, '') || 0) * parseInt(item.quantity.replace(/[^\d]/g, '') || 0)).toFixed(2).replace('.', ',')} Kč</span>
                             </td>
@@ -706,13 +714,6 @@
                                     <button class="delete-btn" onclick="deleteRow(this)">×</button>
                                 </div>
                             </td>
-                            ${hasDiscount ? `
-                            <td>
-                                <div class="discount-container">
-                                    <span class="discount-value">${item.discount || '0%'}</span>
-                                    <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
-                                </div>
-                            </td>` : ''}
                         </tr>`;
                     table.innerHTML += row;
                 });
@@ -747,6 +748,13 @@
                         <button class="edit-price-btn" onclick="editPrice(this)">✎</button>
                     </div>
                 </td>
+                ${hasDiscountColumn ? `
+                <td>
+                    <div class="discount-container">
+                        <span class="discount-value">${discount}%</span>
+                        <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
+                    </div>
+                </td>` : ''}
                 <td>
                     <span class="total-price">${totalPrice.toFixed(2).replace('.', ',')} Kč</span>
                 </td>
@@ -755,14 +763,7 @@
                         <span>${code ? code + (!product ? ' !' : '') : ''}</span>
                         <button class="delete-btn" onclick="deleteRow(this)">×</button>
                     </div>
-                </td>
-                ${hasDiscountColumn ? `
-                <td>
-                    <div class="discount-container">
-                        <span class="discount-value">${discount}%</span>
-                        <button class="edit-discount-btn" onclick="editDiscount(this)">✎</button>
-                    </div>
-                </td>` : ''}`;
+                </td>`;
             
             table.appendChild(row);
             calculateTotals();
@@ -918,12 +919,12 @@
             const table = document.querySelector('table');
             const headerRow = table.querySelector('thead tr');
             const hasDiscountColumn = headerRow.cells.length > 7;
-            const toggleButton = document.querySelector('button[onclick="toggleDiscountColumn()"]');
+            const toggleButton = document.querySelector('button[onclick="toggleDiscountColumn()"]);
             
             if (hasDiscountColumn) {
-                // Odstraníme sloupec slevy (pozice před EAN)
+                // Odstraníme sloupec slevy (pozice před celkovou cenou)
                 document.querySelectorAll('table tr').forEach(row => {
-                    row.deleteCell(6); // Pozice slevy před EAN
+                    row.deleteCell(5); // Pozice slevy před celkovou cenou
                 });
                 toggleButton.textContent = 'Přidat slevy';
             } else {
@@ -932,9 +933,9 @@
                     
                     const discount = Math.min(100, Math.max(0, parseInt(globalDiscount) || 0));
                     
-                    // Vložíme sloupec slevy před EAN
-                    const eanIndex = 6; // EAN je na pozici 6
-                    const cell = headerRow.insertCell(eanIndex);
+                    // Vložíme sloupec slevy před celkovou cenu
+                    const totalPriceIndex = 5;  // Index před celkovou cenou
+                    const cell = headerRow.insertCell(totalPriceIndex);
                     cell.textContent = 'Sleva';
                     cell.style.fontWeight = 'bold';
                     cell.style.borderBottom = '2px solid #000';
@@ -944,8 +945,8 @@
                         const quantity = parseInt(row.querySelector('.quantity-value').textContent.replace(/[^\d.]/g, '') || 0);
                         const discountedPrice = originalPrice * (1 - discount / 100);
                         
-                        // Vložíme sloupec slevy před EAN
-                        const discountCell = row.insertCell(eanIndex);
+                        // Vložíme sloupec slevy před celkovou cenu
+                        const discountCell = row.insertCell(totalPriceIndex);
                         discountCell.className = 'discount-column';
                         discountCell.innerHTML = `
                             <div class="discount-container">
