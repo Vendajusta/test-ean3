@@ -350,7 +350,7 @@
 <body>
     <h2>Skladový skener</h2>
     <div style="margin-bottom: 15px;">
-        <button onclick="listCameras()">Vybrameru</button>
+        <button onclick="listCameras()">Vybrat kameru</button>
         <button onclick="addManualItem()" style="margin-left: 10px;">Přidat položku ručně</button>
         <button onclick="toggleDiscountColumn()" style="margin-left: 10px;">Přidat slevy</button>
         <button onclick="showPrintView()" style="margin-left: 10px;">Náhled tisku</button>
@@ -389,7 +389,7 @@
                 <tr class="summary-row">
                     <td colspan="7" class="total-cell">
                         součet: <span id="total-price">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
-                        DPH: <span id="total-vat">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
+                        DPH 21 %: <span id="total-vat">0,00 Kč</span> &nbsp;&nbsp;&nbsp;
                         celkem: <span id="total-with-vat">0,00 Kč</span>
                     </td>
                 </tr>
@@ -519,7 +519,7 @@
                 const config = {
                     fps: isIOS ? 5 : 10,
                     qrbox: { width: 250, height: 100 },
-                    aspectRatio: 1.0,
+                    aspectRatio: 4/3,  // Changed from 1.0 to 4:3 ratio
                     formatsToSupport: [
                         Html5QrcodeSupportedFormats.EAN_13,
                         Html5QrcodeSupportedFormats.EAN_8,
@@ -532,9 +532,11 @@
                         useBarCodeDetectorIfSupported: true
                     },
                     videoConstraints: {
-                        width: isIOS ? { ideal: 640, max: 1280 } : { min: 640, ideal: 1280, max: 1920 },
-                        height: isIOS ? { ideal: 480, max: 720 } : { min: 480, ideal: 720, max: 1080 },
-                        facingMode: "environment"
+                        width: { ideal: 640, max: 1280 },
+                        height: { ideal: 480, max: 720 },
+                        facingMode: { exact: "environment" },
+                        focusMode: "continuous",
+                        aspectRatio: 4/3  // Added explicit aspect ratio
                     }
                 };
 
