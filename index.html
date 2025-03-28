@@ -377,7 +377,6 @@
                     <th>Název</th>
                     <th>MJ</th>
                     <th>Jedn.cena</th>
-                    <th>Sleva</th>
                     <th>Celková cena bez DPH</th>
                     <th>EAN</th>
                 </tr>
@@ -919,21 +918,22 @@
             const table = document.querySelector('table');
             const headerRow = table.querySelector('thead tr');
             const hasDiscountColumn = headerRow.cells.length > 7;
-            const toggleButton = document.querySelector('button[onclick="toggleDiscountColumn()"]');  // Fixed quote
+            const toggleButton = document.querySelector('button[onclick="toggleDiscountColumn()"]');
             
             if (hasDiscountColumn) {
-                // Remove discount column (before total price)
+                // Remove discount column (between unit price and total price)
                 document.querySelectorAll('table tr').forEach(row => {
                     row.deleteCell(5);
                 });
                 toggleButton.textContent = 'Přidat slevy';
+                calculateTotals();
             } else {
                 customPrompt('Zadejte slevu v procentech (0-100):', '0').then(globalDiscount => {
                     if (globalDiscount === null) return;
                     
                     const discount = Math.min(100, Math.max(0, parseInt(globalDiscount) || 0));
                     
-                    // Insert discount column before total price
+                    // Insert discount column between unit price and total price
                     const cell = headerRow.insertCell(5);
                     cell.textContent = 'Sleva';
                     cell.style.fontWeight = 'bold';
